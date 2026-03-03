@@ -1,0 +1,41 @@
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: digital-twin-substation
+nodes:
+  - role: control-plane
+    kubeadmConfigPatches:
+    - |
+      kind: InitConfiguration
+      nodeRegistration:
+        kubeletExtraArgs:
+          node-labels: "zone=control"
+    extraPortMappings:
+    # Grafana UI
+    - containerPort: 30000
+      hostPort: 3000
+      protocol: TCP
+    # API Gateway
+    - containerPort: 30080
+      hostPort: 8080
+      protocol: TCP
+  - role: worker
+    labels:
+      zone: ot
+      substation: station-a
+  - role: worker
+    labels:
+      zone: edge
+      substation: station-a
+  - role: worker
+    labels:
+      zone: data
+  - role: worker
+    labels:
+      zone: application
+  - role: worker
+    labels:
+      zone: it
+networking:
+  # ゾーン分離を実現するためのネットワークポリシーを有効化
+  disableDefaultCNI: false
+  kubeProxyMode: "iptables"

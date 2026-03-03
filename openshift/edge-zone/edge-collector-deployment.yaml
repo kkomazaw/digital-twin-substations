@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: edge-collector
+  namespace: edge-zone
+  labels:
+    app: edge-collector
+    zone: edge
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: edge-collector
+  template:
+    metadata:
+      labels:
+        app: edge-collector
+        zone: edge
+    spec:
+      tolerations:
+      - key: "node.kubernetes.io/disk-pressure"
+        operator: "Exists"
+        effect: "NoSchedule"
+      containers:
+      - name: edge-collector
+        image: image-registry.openshift-image-registry.svc:5000/digital-twin/edge-collector:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8888
+          name: ied-listener
+        env:
+        - name: LISTEN_HOST
+          value: "0.0.0.0"
+        - name: LISTEN_PORT
+          value: "8888"
+        - name: REDIS_HOST
+          value: "redis.data-zone.svc.cluster.local"
+        - name: REDIS_PORT
+          value: "6379"
+        - name: REDIS_STREAM
+          value: "substation-telemetry"
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: edge-collector
+  namespace: edge-zone
+spec:
+  selector:
+    app: edge-collector
+  ports:
+  - port: 8888
+    targetPort: 8888
+    name: ied-listener
+  type: ClusterIP

@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: app-zone
+  labels:
+    zone: application
+    iec62443: application-layer

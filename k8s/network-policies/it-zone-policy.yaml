@@ -1,0 +1,40 @@
+# IT Zone Network Policy
+# ITゾーン: 外部アクセス許可、各種サービスへのアクセス許可
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: it-zone-policy
+  namespace: it-zone
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  # すべてからのアクセス許可（外部UI）
+  - {}
+  egress:
+  # DNS解決を許可
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: kube-system
+    ports:
+    - protocol: UDP
+      port: 53
+  # Data Zoneへのアクセス許可
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          zone: data
+    ports:
+    - protocol: TCP
+      port: 8086  # InfluxDB
+  # Application Zoneへのアクセス許可
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          zone: application
+    ports:
+    - protocol: TCP
+      port: 8000  # PowSyBl API

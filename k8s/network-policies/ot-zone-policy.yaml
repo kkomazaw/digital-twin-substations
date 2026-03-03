@@ -1,0 +1,31 @@
+# OT Zone Network Policy
+# IEC 62443準拠: OTゾーンは外部からの直接アクセスを禁止
+# Edgeゾーンへのアウトバウンドのみ許可
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: ot-zone-policy
+  namespace: ot-zone
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress: []  # 外部からのアクセスを一切禁止
+  egress:
+  # DNS解決を許可
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: kube-system
+    ports:
+    - protocol: UDP
+      port: 53
+  # Edge Zoneへのアウトバウンドのみ許可
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          zone: edge
+    ports:
+    - protocol: TCP
+      port: 8888

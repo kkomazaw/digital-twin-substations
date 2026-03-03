@@ -1,0 +1,58 @@
+# Data Zone Network Policy
+# データストアゾーン: Edge, Application, IT Zoneからのアクセスを許可
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: data-zone-policy
+  namespace: data-zone
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  # Edge Zoneからのアクセス許可 (Kafkaへのデータ送信)
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          zone: edge
+    ports:
+    - protocol: TCP
+      port: 9092  # Kafka
+  # Application Zoneからのアクセス許可 (InfluxDB, Postgres)
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          zone: application
+    ports:
+    - protocol: TCP
+      port: 8086  # InfluxDB
+    - protocol: TCP
+      port: 5432  # Postgres
+  # IT Zoneからのアクセス許可 (Grafana -> InfluxDB)
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          zone: it
+    ports:
+    - protocol: TCP
+      port: 8086  # InfluxDB
+  # Data Zone内の相互通信許可
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          zone: data
+  egress:
+  # DNS解決を許可
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: kube-system
+    ports:
+    - protocol: UDP
+      port: 53
+  # Data Zone内の相互通信許可
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          zone: data

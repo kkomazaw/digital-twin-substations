@@ -1,0 +1,53 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ot-zone
+  labels:
+    zone: ot
+    iec62443: level-0-2
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ied-simulator
+  namespace: ot-zone
+  labels:
+    app: ied-simulator
+    zone: ot
+spec:
+  replicas: 3  # 複数のIEDをシミュレート
+  selector:
+    matchLabels:
+      app: ied-simulator
+  template:
+    metadata:
+      labels:
+        app: ied-simulator
+        zone: ot
+    spec:
+      nodeSelector:
+        zone: ot
+      containers:
+      - name: ied-simulator
+        image: localhost/ied-simulator:latest
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: STATION_ID
+          value: "station-a"
+        - name: IED_ID
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: DATA_INTERVAL
+          value: "1.0"
+        - name: OUTPUT_HOST
+          value: "edge-collector.edge-zone.svc.cluster.local"
+        - name: OUTPUT_PORT
+          value: "8888"
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+          limits:
+            cpu: 100m
+            memory: 128Mi

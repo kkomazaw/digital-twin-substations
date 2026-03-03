@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka-influxdb-consumer
+  namespace: data-zone
+  labels:
+    app: kafka-influxdb-consumer
+    zone: data
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka-influxdb-consumer
+  template:
+    metadata:
+      labels:
+        app: kafka-influxdb-consumer
+        zone: data
+    spec:
+      nodeSelector:
+        zone: data
+      containers:
+      - name: consumer
+        image: localhost/kafka-influxdb-consumer:latest
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: KAFKA_BROKERS
+          value: "kafka.data-zone.svc.cluster.local:9092"
+        - name: KAFKA_TOPIC
+          value: "substation-telemetry"
+        - name: KAFKA_GROUP_ID
+          value: "influxdb-consumer-group"
+        - name: INFLUXDB_URL
+          value: "http://influxdb.data-zone.svc.cluster.local:8086"
+        - name: INFLUXDB_TOKEN
+          value: "my-super-secret-auth-token"
+        - name: INFLUXDB_ORG
+          value: "substation"
+        - name: INFLUXDB_BUCKET
+          value: "telemetry"
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi

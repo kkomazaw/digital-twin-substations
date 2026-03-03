@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: it-zone
+  labels:
+    zone: it
+    iec62443: it-layer

@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-influxdb-consumer
+  namespace: data-zone
+  labels:
+    app: redis-influxdb-consumer
+    zone: data
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis-influxdb-consumer
+  template:
+    metadata:
+      labels:
+        app: redis-influxdb-consumer
+        zone: data
+    spec:
+      tolerations:
+      - key: "node.kubernetes.io/disk-pressure"
+        operator: "Exists"
+        effect: "NoSchedule"
+      containers:
+      - name: consumer
+        image: image-registry.openshift-image-registry.svc:5000/digital-twin/redis-influxdb-consumer:latest
+        imagePullPolicy: Always
+        env:
+        - name: PYTHONUNBUFFERED
+          value: "1"
+        - name: REDIS_HOST
+          value: "redis.data-zone.svc.cluster.local"
+        - name: REDIS_PORT
+          value: "6379"
+        - name: REDIS_STREAM
+          value: "substation-telemetry"
+        - name: REDIS_CONSUMER_GROUP
+          value: "influxdb-consumers"
+        - name: REDIS_CONSUMER_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: INFLUXDB_URL
+          value: "http://influxdb.data-zone.svc.cluster.local:8086"
+        - name: INFLUXDB_TOKEN
+          value: "my-super-secret-auth-token"
+        - name: INFLUXDB_ORG
+          value: "substation"
+        - name: INFLUXDB_BUCKET
+          value: "telemetry"
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi

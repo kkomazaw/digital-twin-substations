@@ -1,0 +1,66 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: edge-zone
+  labels:
+    zone: edge
+    iec62443: level-3
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: edge-collector
+  namespace: edge-zone
+  labels:
+    app: edge-collector
+    zone: edge
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: edge-collector
+  template:
+    metadata:
+      labels:
+        app: edge-collector
+        zone: edge
+    spec:
+      nodeSelector:
+        zone: edge
+      containers:
+      - name: edge-collector
+        image: localhost/edge-collector:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8888
+          name: ied-listener
+        env:
+        - name: LISTEN_HOST
+          value: "0.0.0.0"
+        - name: LISTEN_PORT
+          value: "8888"
+        - name: KAFKA_BROKERS
+          value: "kafka.data-zone.svc.cluster.local:9092"
+        - name: KAFKA_TOPIC
+          value: "substation-telemetry"
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: edge-collector
+  namespace: edge-zone
+spec:
+  selector:
+    app: edge-collector
+  ports:
+  - port: 8888
+    targetPort: 8888
+    name: ied-listener
+  type: ClusterIP

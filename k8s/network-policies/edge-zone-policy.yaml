@@ -1,0 +1,39 @@
+# Edge Zone Network Policy
+# IEC 62443準拠: DMZ/Edgeゾーン
+# OTからのインバウンドとData Zoneへのアウトバウンドを許可
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: edge-zone-policy
+  namespace: edge-zone
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  # OT Zoneからのインバウンドを許可
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          zone: ot
+    ports:
+    - protocol: TCP
+      port: 8888
+  egress:
+  # DNS解決を許可
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: kube-system
+    ports:
+    - protocol: UDP
+      port: 53
+  # Data Zone (Kafka)へのアウトバウンドを許可
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          zone: data
+    ports:
+    - protocol: TCP
+      port: 9092  # Kafka
