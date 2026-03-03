@@ -3,11 +3,14 @@
 変電所のデジタルツインをオープンソースで実現するデモプロジェクトです。
 IEC 62443準拠のゾーン分離を実装し、OpenShift Local上で動作します。
 
+**🆕 FledgePOWER統合**: プロダクショングレードのIoTゲートウェイとEdge Collectorのハイブリッド構成
+
 ## 📖 ドキュメント
 
 - **[デモ操作手順書](docs/DEMO_GUIDE.md)** - 包括的なデモガイド（5つのシナリオ、トラブルシューティング含む）
 - **[クイックリファレンス](docs/DEMO_QUICK_REFERENCE.md)** - デモ実施時の即座参照用チートシート
 - **[ネットワーク設計書](docs/NETWORK_DESIGN.md)** - アーキテクチャとセキュリティゾーンの詳細
+- **[FledgePOWER統合設計書](docs/FLEDGEPOWER_INTEGRATION.md)** - FledgePOWERハイブリッド統合の詳細
 
 ## アーキテクチャ
 

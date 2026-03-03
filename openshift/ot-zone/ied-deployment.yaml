@@ -25,6 +25,9 @@ spec:
       - name: ied-simulator
         image: image-registry.openshift-image-registry.svc:5000/digital-twin/ied-simulator:latest
         imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+          name: http
         env:
         - name: STATION_ID
           value: "station-a"
@@ -45,3 +48,19 @@ spec:
           limits:
             cpu: 100m
             memory: 128Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ied-simulator
+  namespace: ot-zone
+spec:
+  selector:
+    app: ied-simulator
+  ports:
+  - port: 8080
+    targetPort: 8080
+    name: http
+  type: ClusterIP
+  # Headless service to allow FledgePOWER to discover individual IED pods
+  clusterIP: None

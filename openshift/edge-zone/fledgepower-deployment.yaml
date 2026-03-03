@@ -1,0 +1,148 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fledge-config
+  namespace: edge-zone
+data:
+  south-http.json: |
+    {
+      "name": "IED-HTTP-Poll",
+      "plugin": "http_poll",
+      "type": "south",
+      "enabled": true,
+      "config": {
+        "asset_name": "substation_telemetry",
+        "url": "http://edge-collector.edge-zone.svc.cluster.local:8888/ied-data",
+        "poll_interval": 1,
+        "timeout": 5
+      }
+    }
+  north-redis.json: |
+    {
+      "name": "Redis-Streams",
+      "plugin": "redis_stream",
+      "type": "north",
+      "enabled": true,
+      "config": {
+        "host": "redis.data-zone.svc.cluster.local",
+        "port": 6379,
+        "stream_name": "fledge-telemetry",
+        "max_length": 10000,
+        "source": "fledgepower"
+      }
+    }
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: fledge-data
+  namespace: edge-zone
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fledgepower-gateway
+  namespace: edge-zone
+spec:
+  selector:
+    app: fledgepower-gateway
+  ports:
+  - name: gui
+    port: 8081
+    targetPort: 8081
+  - name: api
+    port: 1995
+    targetPort: 1995
+  - name: mqtt
+    port: 6683
+    targetPort: 6683
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fledgepower-gateway
+  namespace: edge-zone
+  labels:
+    app: fledgepower-gateway
+    zone: edge
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fledgepower-gateway
+  template:
+    metadata:
+      labels:
+        app: fledgepower-gateway
+        zone: edge
+    spec:
+      tolerations:
+      - key: "node.kubernetes.io/disk-pressure"
+        operator: "Exists"
+        effect: "NoSchedule"
+      containers:
+      - name: fledgepower
+        image: image-registry.openshift-image-registry.svc:5000/digital-twin/fledgepower-gateway:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8081
+          name: gui
+        - containerPort: 1995
+          name: api
+        - containerPort: 6683
+          name: mqtt
+        env:
+        - name: FLEDGE_SERVICE_NAME
+          value: "FledgePOWER-Gateway"
+        - name: FLEDGE_LOG_LEVEL
+          value: "info"
+        resources:
+          requests:
+            cpu: 250m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        volumeMounts:
+        - name: fledge-data
+          mountPath: /usr/local/fledge/data
+        - name: fledge-config
+          mountPath: /etc/fledge/config
+        livenessProbe:
+          httpGet:
+            path: /fledge/ping
+            port: 8081
+          initialDelaySeconds: 30
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /fledge/ping
+            port: 8081
+          initialDelaySeconds: 10
+          periodSeconds: 10
+      volumes:
+      - name: fledge-data
+        persistentVolumeClaim:
+          claimName: fledge-data
+      - name: fledge-config
+        configMap:
+          name: fledge-config
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: fledgepower-gui
+  namespace: edge-zone
+spec:
+  to:
+    kind: Service
+    name: fledgepower-gateway
+  port:
+    targetPort: gui

@@ -1,0 +1,91 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: fledgepower-isolation
+  namespace: edge-zone
+spec:
+  podSelector:
+    matchLabels:
+      app: fledgepower-gateway
+  policyTypes:
+  - Ingress
+  - Egress
+
+  # Ingress: Allow from OT Zone (IED simulators) and monitoring
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ot-zone
+    ports:
+    - protocol: TCP
+      port: 8081  # Fledge GUI
+    - protocol: TCP
+      port: 1995  # Management API
+
+  # Also allow from IT Zone for monitoring/debugging
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: it-zone
+    ports:
+    - protocol: TCP
+      port: 8081  # Fledge GUI
+
+  # Egress: Allow to Data Zone (Redis) and DNS
+  egress:
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: data-zone
+    ports:
+    - protocol: TCP
+      port: 6379  # Redis
+
+  # Allow DNS resolution
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: kube-system
+    ports:
+    - protocol: UDP
+      port: 53
+
+  # Allow to Edge Collector (for hybrid mode)
+  - to:
+    - podSelector:
+        matchLabels:
+          app: edge-collector
+    ports:
+    - protocol: TCP
+      port: 8888
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: edge-collector-allow-fledge
+  namespace: edge-zone
+spec:
+  podSelector:
+    matchLabels:
+      app: edge-collector
+  policyTypes:
+  - Ingress
+  ingress:
+  # Existing rules for OT Zone
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ot-zone
+    ports:
+    - protocol: TCP
+      port: 8888
+
+  # New: Allow from FledgePOWER (for HTTP polling in hybrid mode)
+  - from:
+    - podSelector:
+        matchLabels:
+          app: fledgepower-gateway
+    ports:
+    - protocol: TCP
+      port: 8888
