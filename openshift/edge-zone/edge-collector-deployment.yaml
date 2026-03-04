@@ -1,3 +1,31 @@
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: edge-collector
+  namespace: edge-zone
+spec:
+  output:
+    to:
+      kind: ImageStreamTag
+      name: edge-collector:latest
+  source:
+    type: Binary
+    binary: {}
+  strategy:
+    type: Docker
+    dockerStrategy:
+      dockerfilePath: Dockerfile
+  triggers: []
+---
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: edge-collector
+  namespace: edge-zone
+spec:
+  lookupPolicy:
+    local: true
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -23,7 +51,7 @@ spec:
         effect: "NoSchedule"
       containers:
       - name: edge-collector
-        image: image-registry.openshift-image-registry.svc:5000/digital-twin/edge-collector:latest
+        image: image-registry.openshift-image-registry.svc:5000/edge-zone/edge-collector:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 8888

@@ -1,3 +1,31 @@
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: redis-influxdb-consumer
+  namespace: data-zone
+spec:
+  output:
+    to:
+      kind: ImageStreamTag
+      name: redis-influxdb-consumer:latest
+  source:
+    type: Binary
+    binary: {}
+  strategy:
+    type: Docker
+    dockerStrategy:
+      dockerfilePath: Dockerfile
+  triggers: []
+---
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: redis-influxdb-consumer
+  namespace: data-zone
+spec:
+  lookupPolicy:
+    local: true
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -23,7 +51,7 @@ spec:
         effect: "NoSchedule"
       containers:
       - name: consumer
-        image: image-registry.openshift-image-registry.svc:5000/digital-twin/redis-influxdb-consumer:latest
+        image: image-registry.openshift-image-registry.svc:5000/data-zone/redis-influxdb-consumer:latest
         imagePullPolicy: Always
         env:
         - name: PYTHONUNBUFFERED

@@ -19,6 +19,14 @@ data:
         tlsSkipVerify: true
       secureJsonData:
         token: my-super-secret-auth-token
+    - name: PowSyBl API
+      type: yesoreyeram-infinity-datasource
+      uid: powsybl-api
+      access: proxy
+      url: http://powsybl-api.app-zone.svc.cluster.local:8000
+      jsonData:
+        tlsSkipVerify: true
+      editable: true
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -269,7 +277,7 @@ spec:
         - name: GF_SECURITY_ADMIN_PASSWORD
           value: admin
         - name: GF_INSTALL_PLUGINS
-          value: ""
+          value: "yesoreyeram-infinity-datasource"
         resources:
           requests:
             cpu: 100m
@@ -286,6 +294,14 @@ spec:
           mountPath: /etc/grafana/provisioning/dashboards
         - name: grafana-dashboard-substation
           mountPath: /var/lib/grafana/dashboards
+        - name: grafana-dashboard-topology
+          mountPath: /var/lib/grafana/dashboards/topology
+        - name: grafana-dashboard-powerflow
+          mountPath: /var/lib/grafana/dashboards/powerflow
+        - name: grafana-dashboard-analysis
+          mountPath: /var/lib/grafana/dashboards/analysis
+        - name: grafana-dashboard-network-topology
+          mountPath: /var/lib/grafana/dashboards/network-topology
       volumes:
       - name: grafana-storage
         emptyDir: {}
@@ -298,6 +314,18 @@ spec:
       - name: grafana-dashboard-substation
         configMap:
           name: grafana-dashboard-substation
+      - name: grafana-dashboard-topology
+        configMap:
+          name: grafana-dashboard-topology
+      - name: grafana-dashboard-powerflow
+        configMap:
+          name: grafana-dashboard-powerflow
+      - name: grafana-dashboard-analysis
+        configMap:
+          name: grafana-dashboard-analysis
+      - name: grafana-dashboard-network-topology
+        configMap:
+          name: grafana-dashboard-network-topology
 ---
 apiVersion: route.openshift.io/v1
 kind: Route

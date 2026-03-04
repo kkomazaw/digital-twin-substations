@@ -35,6 +35,8 @@ spec:
       - key: "node.kubernetes.io/disk-pressure"
         operator: "Exists"
         effect: "NoSchedule"
+      securityContext:
+        fsGroup: 1000
       containers:
       - name: influxdb
         image: docker.io/library/influxdb:2.7-alpine
@@ -63,6 +65,10 @@ spec:
         volumeMounts:
         - name: influxdb-data
           mountPath: /var/lib/influxdb2
+        - name: influxdb-config
+          mountPath: /etc/influxdb2
       volumes:
       - name: influxdb-data
+        emptyDir: {}
+      - name: influxdb-config
         emptyDir: {}

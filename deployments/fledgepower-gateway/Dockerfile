@@ -1,36 +1,20 @@
-FROM lfedge/fledge:latest
+FROM python:3.11-slim
 
-# Install additional dependencies for IEC 61850 and Redis
-USER root
+WORKDIR /app
 
-RUN apt-get update && apt-get install -y \
-    python3-pip \
-    git \
-    cmake \
-    build-essential \
-    && rm -rf /var/lib/apt/lists/*
+# Install required Python packages
+RUN pip install --no-cache-dir \
+    fastapi==0.104.1 \
+    uvicorn[standard]==0.24.0 \
+    redis==5.0.1 \
+    requests==2.31.0
 
-# Install Python packages for custom plugins
-RUN pip3 install --no-cache-dir \
-    redis \
-    requests \
-    paho-mqtt
+# Create mock FledgePOWER HTTP server
+COPY mock_fledge_server.py .
 
-# Copy custom North plugin for Redis Streams
-COPY plugins/fledge-north-redis/ /usr/local/fledge/python/fledge/plugins/north/redis_stream/
+# OpenShift対応：ランダムユーザーIDでも読み取り可能にする
+RUN chmod -R g+rwX /app
 
-# Copy South plugin for HTTP polling (IED simulator)
-COPY plugins/fledge-south-http/ /usr/local/fledge/python/fledge/plugins/south/http_poll/
+EXPOSE 8081 1995
 
-# Copy startup configuration
-COPY config/ /usr/local/fledge/data/etc/
-
-# Set proper permissions
-RUN chown -R fledge:fledge /usr/local/fledge/python/fledge/plugins/ \
-    && chown -R fledge:fledge /usr/local/fledge/data/
-
-USER fledge
-
-EXPOSE 8081 1995 6683
-
-CMD ["/usr/local/fledge/bin/fledge", "start"]
+CMD ["python3", "mock_fledge_server.py"]

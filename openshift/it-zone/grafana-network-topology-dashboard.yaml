@@ -1,0 +1,352 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-network-topology
+  namespace: it-zone
+data:
+  network-topology.json: |
+    {
+      "annotations": {
+        "list": []
+      },
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 1,
+      "id": null,
+      "links": [],
+      "liveNow": true,
+      "panels": [
+        {
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "powsybl-api"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 20,
+            "w": 24,
+            "x": 0,
+            "y": 0
+          },
+          "id": 1,
+          "options": {
+            "edges": {
+              "mainStatUnit": "none",
+              "secondaryStatUnit": "none"
+            },
+            "nodes": {
+              "mainStatUnit": "none",
+              "secondaryStatUnit": "none",
+              "arcs": [
+                {
+                  "field": "arc__success",
+                  "color": "green"
+                },
+                {
+                  "field": "arc__failed",
+                  "color": "red"
+                },
+                {
+                  "field": "arc__warning",
+                  "color": "yellow"
+                }
+              ]
+            }
+          },
+          "pluginVersion": "10.2.0",
+          "targets": [
+            {
+              "columns": [],
+              "datasource": {
+                "type": "yesoreyeram-infinity-datasource",
+                "uid": "powsybl-api"
+              },
+              "filters": [],
+              "format": "table",
+              "global_query_id": "",
+              "refId": "Nodes",
+              "root_selector": "nodes",
+              "source": "url",
+              "type": "json",
+              "url": "http://powsybl-api.app-zone.svc.cluster.local:8000/api/v1/network/topology",
+              "url_options": {
+                "method": "GET"
+              }
+            },
+            {
+              "columns": [],
+              "datasource": {
+                "type": "yesoreyeram-infinity-datasource",
+                "uid": "powsybl-api"
+              },
+              "filters": [],
+              "format": "table",
+              "global_query_id": "",
+              "refId": "Edges",
+              "root_selector": "edges",
+              "source": "url",
+              "type": "json",
+              "url": "http://powsybl-api.app-zone.svc.cluster.local:8000/api/v1/network/topology",
+              "url_options": {
+                "method": "GET"
+              }
+            }
+          ],
+          "title": "IEEE 14 Bus Network Topology",
+          "type": "nodeGraph"
+        },
+        {
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "powsybl-api"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                },
+                "inspect": false
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 0.9
+                  },
+                  {
+                    "color": "red",
+                    "value": 0.95
+                  }
+                ]
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "arc__success"
+                },
+                "properties": [
+                  {
+                    "id": "custom.cellOptions",
+                    "value": {
+                      "type": "gauge",
+                      "mode": "gradient"
+                    }
+                  },
+                  {
+                    "id": "min",
+                    "value": 0
+                  },
+                  {
+                    "id": "max",
+                    "value": 1
+                  },
+                  {
+                    "id": "displayName",
+                    "value": "Health"
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 10,
+            "w": 12,
+            "x": 0,
+            "y": 20
+          },
+          "id": 2,
+          "options": {
+            "cellHeight": "sm",
+            "footer": {
+              "countRows": false,
+              "fields": "",
+              "reducer": [
+                "sum"
+              ],
+              "show": false
+            },
+            "showHeader": true,
+            "sortBy": [
+              {
+                "desc": false,
+                "displayName": "id"
+              }
+            ]
+          },
+          "pluginVersion": "10.2.0",
+          "targets": [
+            {
+              "columns": [],
+              "datasource": {
+                "type": "yesoreyeram-infinity-datasource",
+                "uid": "powsybl-api"
+              },
+              "filters": [],
+              "format": "table",
+              "global_query_id": "",
+              "refId": "A",
+              "root_selector": "nodes",
+              "source": "url",
+              "type": "json",
+              "url": "http://powsybl-api.app-zone.svc.cluster.local:8000/api/v1/network/topology",
+              "url_options": {
+                "method": "GET"
+              }
+            }
+          ],
+          "title": "Bus Status",
+          "type": "table"
+        },
+        {
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "powsybl-api"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                },
+                "inspect": false
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "strength"
+                },
+                "properties": [
+                  {
+                    "id": "custom.cellOptions",
+                    "value": {
+                      "type": "gauge"
+                    }
+                  },
+                  {
+                    "id": "min",
+                    "value": 0
+                  },
+                  {
+                    "id": "max",
+                    "value": 1
+                  },
+                  {
+                    "id": "displayName",
+                    "value": "Loading"
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 10,
+            "w": 12,
+            "x": 12,
+            "y": 20
+          },
+          "id": 3,
+          "options": {
+            "cellHeight": "sm",
+            "footer": {
+              "countRows": false,
+              "fields": "",
+              "reducer": [
+                "sum"
+              ],
+              "show": false
+            },
+            "showHeader": true,
+            "sortBy": [
+              {
+                "desc": true,
+                "displayName": "Loading"
+              }
+            ]
+          },
+          "pluginVersion": "10.2.0",
+          "targets": [
+            {
+              "columns": [],
+              "datasource": {
+                "type": "yesoreyeram-infinity-datasource",
+                "uid": "powsybl-api"
+              },
+              "filters": [],
+              "format": "table",
+              "global_query_id": "",
+              "refId": "A",
+              "root_selector": "edges",
+              "source": "url",
+              "type": "json",
+              "url": "http://powsybl-api.app-zone.svc.cluster.local:8000/api/v1/network/topology",
+              "url_options": {
+                "method": "GET"
+              }
+            }
+          ],
+          "title": "Line Status",
+          "type": "table"
+        }
+      ],
+      "refresh": "10s",
+      "schemaVersion": 38,
+      "style": "dark",
+      "tags": ["network", "topology", "powsybl"],
+      "templating": {
+        "list": []
+      },
+      "time": {
+        "from": "now-15m",
+        "to": "now"
+      },
+      "timepicker": {
+        "refresh_intervals": [
+          "5s",
+          "10s",
+          "30s",
+          "1m",
+          "5m"
+        ]
+      },
+      "timezone": "",
+      "title": "Network Topology (PowSyBl)",
+      "uid": "network-topology",
+      "version": 0,
+      "weekStart": ""
+    }

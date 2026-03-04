@@ -1,46 +1,42 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: powsybl-api
+  name: powsybl-analysis
   namespace: app-zone
 spec:
   selector:
-    app: powsybl-api
+    app: powsybl-analysis
   ports:
-  - port: 8000
-    targetPort: 8000
+  - port: 8001
+    targetPort: 8001
     name: http
   type: ClusterIP
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: powsybl-api
+  name: powsybl-analysis
   namespace: app-zone
   labels:
-    app: powsybl-api
-    zone: application
+    app: powsybl-analysis
+    zone: app
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
-      app: powsybl-api
+      app: powsybl-analysis
   template:
     metadata:
       labels:
-        app: powsybl-api
-        zone: application
+        app: powsybl-analysis
+        zone: app
     spec:
-      tolerations:
-      - key: "node.kubernetes.io/disk-pressure"
-        operator: "Exists"
-        effect: "NoSchedule"
       containers:
-      - name: api
-        image: image-registry.openshift-image-registry.svc:5000/app-zone/powsybl-api:latest
+      - name: powsybl-analysis
+        image: image-registry.openshift-image-registry.svc:5000/app-zone/powsybl-analysis:latest
         imagePullPolicy: Always
         ports:
-        - containerPort: 8000
+        - containerPort: 8001
         env:
         - name: INFLUXDB_URL
           value: "http://influxdb.data-zone.svc.cluster.local:8086"
@@ -50,48 +46,40 @@ spec:
           value: "substation"
         - name: INFLUXDB_BUCKET
           value: "telemetry"
+        - name: REDIS_HOST
+          value: "redis.data-zone.svc.cluster.local"
+        - name: REDIS_PORT
+          value: "6379"
         resources:
           requests:
-            cpu: 100m
-            memory: 128Mi
-          limits:
-            cpu: 500m
+            cpu: 200m
             memory: 512Mi
+          limits:
+            cpu: 1000m
+            memory: 2Gi
         livenessProbe:
           httpGet:
             path: /
-            port: 8000
-          initialDelaySeconds: 10
-          periodSeconds: 30
+            port: 8001
+          initialDelaySeconds: 30
+          periodSeconds: 10
         readinessProbe:
           httpGet:
             path: /
-            port: 8000
-          initialDelaySeconds: 5
-          periodSeconds: 10
----
-apiVersion: route.openshift.io/v1
-kind: Route
-metadata:
-  name: powsybl-api
-  namespace: app-zone
-spec:
-  to:
-    kind: Service
-    name: powsybl-api
-  port:
-    targetPort: http
+            port: 8001
+          initialDelaySeconds: 10
+          periodSeconds: 5
 ---
 apiVersion: build.openshift.io/v1
 kind: BuildConfig
 metadata:
-  name: powsybl-api
+  name: powsybl-analysis
   namespace: app-zone
 spec:
   output:
     to:
       kind: ImageStreamTag
-      name: powsybl-api:latest
+      name: powsybl-analysis:latest
   source:
     type: Binary
     binary: {}
@@ -101,18 +89,30 @@ spec:
       dockerfilePath: Dockerfile
   resources:
     limits:
+      cpu: "1"
+      memory: 2Gi
+    requests:
       cpu: 500m
       memory: 1Gi
-    requests:
-      cpu: 100m
-      memory: 512Mi
   triggers: []
 ---
 apiVersion: image.openshift.io/v1
 kind: ImageStream
 metadata:
-  name: powsybl-api
+  name: powsybl-analysis
   namespace: app-zone
 spec:
   lookupPolicy:
     local: true
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: powsybl-analysis
+  namespace: app-zone
+spec:
+  to:
+    kind: Service
+    name: powsybl-analysis
+  port:
+    targetPort: http

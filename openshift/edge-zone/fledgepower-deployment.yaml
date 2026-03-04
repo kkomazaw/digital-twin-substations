@@ -1,3 +1,31 @@
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: fledgepower-gateway
+  namespace: edge-zone
+spec:
+  output:
+    to:
+      kind: ImageStreamTag
+      name: fledgepower-gateway:latest
+  source:
+    type: Binary
+    binary: {}
+  strategy:
+    type: Docker
+    dockerStrategy:
+      dockerfilePath: Dockerfile
+  triggers: []
+---
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: fledgepower-gateway
+  namespace: edge-zone
+spec:
+  lookupPolicy:
+    local: true
+---
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -89,7 +117,7 @@ spec:
         effect: "NoSchedule"
       containers:
       - name: fledgepower
-        image: image-registry.openshift-image-registry.svc:5000/digital-twin/fledgepower-gateway:latest
+        image: image-registry.openshift-image-registry.svc:5000/edge-zone/fledgepower-gateway:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 8081
@@ -105,11 +133,11 @@ spec:
           value: "info"
         resources:
           requests:
-            cpu: 250m
-            memory: 256Mi
+            cpu: 50m
+            memory: 128Mi
           limits:
-            cpu: 500m
-            memory: 512Mi
+            cpu: 200m
+            memory: 256Mi
         volumeMounts:
         - name: fledge-data
           mountPath: /usr/local/fledge/data

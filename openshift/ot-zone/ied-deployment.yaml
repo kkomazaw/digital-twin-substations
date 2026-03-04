@@ -1,3 +1,31 @@
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: ied-simulator
+  namespace: ot-zone
+spec:
+  output:
+    to:
+      kind: ImageStreamTag
+      name: ied-simulator:latest
+  source:
+    type: Binary
+    binary: {}
+  strategy:
+    type: Docker
+    dockerStrategy:
+      dockerfilePath: Dockerfile
+  triggers: []
+---
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: ied-simulator
+  namespace: ot-zone
+spec:
+  lookupPolicy:
+    local: true
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -23,7 +51,7 @@ spec:
         effect: "NoSchedule"
       containers:
       - name: ied-simulator
-        image: image-registry.openshift-image-registry.svc:5000/digital-twin/ied-simulator:latest
+        image: image-registry.openshift-image-registry.svc:5000/ot-zone/ied-simulator:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 8080

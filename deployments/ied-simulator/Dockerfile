@@ -5,7 +5,8 @@ WORKDIR /app
 COPY ied_simulator.py .
 COPY ied_http_server.py .
 
-RUN chmod +x ied_simulator.py ied_http_server.py
+# OpenShift対応：ランダムユーザーIDでも読み取り可能にする
+RUN chmod -R g+rwX /app
 
-# デフォルトはHTTPサーバーモード（FledgePOWER対応）
-CMD ["python3", "ied_http_server.py"]
+# プッシュモード：Edge Collectorにデータを送信
+CMD ["python3", "ied_simulator.py"]

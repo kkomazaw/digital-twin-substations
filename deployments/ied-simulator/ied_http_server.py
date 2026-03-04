@@ -5,6 +5,7 @@ HTTPエンドポイントを提供し、Fledgeからのポーリングに対応
 """
 import json
 import os
+import socket
 import threading
 from datetime import datetime
 from http.server import HTTPServer, BaseHTTPRequestHandler
