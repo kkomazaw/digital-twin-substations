@@ -630,7 +630,7 @@ data:
               "root_selector": "",
               "source": "url",
               "type": "json",
-              "url": "http://10.217.5.224:8000/stations",
+              "url": "/api/v1/loadflow/stations",
               "url_options": {
                 "data": "",
                 "method": "GET"

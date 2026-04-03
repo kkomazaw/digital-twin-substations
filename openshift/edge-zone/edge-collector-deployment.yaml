@@ -62,7 +62,7 @@ spec:
         - name: LISTEN_PORT
           value: "8888"
         - name: REDIS_HOST
-          value: "redis.data-zone.svc.cluster.local"
+          value: "10.217.5.32"
         - name: REDIS_PORT
           value: "6379"
         - name: REDIS_STREAM

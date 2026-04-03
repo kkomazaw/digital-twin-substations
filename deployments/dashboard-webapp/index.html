@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>デジタル変電所 — PowSyBl 高度分析ダッシュボード</title>
+<style>
+:root {
+  --color-background-primary: #ffffff;
+  --color-background-secondary: #f7f7f5;
+  --color-background-tertiary: #eeeeec;
+  --color-background-success: #d4f4dd;
+  --color-background-warning: #fff4cc;
+  --color-background-danger: #ffe5e5;
+  --color-background-info: #d9edff;
+  --color-text-primary: #2c2c2c;
+  --color-text-secondary: #6b6b6b;
+  --color-text-success: #1d7a44;
+  --color-text-warning: #8b6914;
+  --color-text-danger: #c92a2a;
+  --color-text-info: #1c5a9e;
+  --color-border-primary: #d5d5d3;
+  --color-border-secondary: #e5e5e3;
+  --color-border-tertiary: #ececea;
+  --color-border-success: #6bc48d;
+  --color-border-warning: #f0c23e;
+  --color-border-danger: #e24b4a;
+  --color-border-info: #5ba3e0;
+  --border-radius-sm: 4px;
+  --border-radius-md: 6px;
+  --border-radius-lg: 8px;
+  --font-mono: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+}
+
+* { box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  margin: 0;
+  padding: 20px;
+  background: var(--color-background-secondary);
+  color: var(--color-text-primary);
+  line-height: 1.5;
+}
+
+.container { max-width: 1400px; margin: 0 auto; }
+
+.pstep {
+  cursor: pointer;
+  padding: 5px 10px;
+  border-radius: var(--border-radius-md);
+  border: 0.5px solid var(--color-border-tertiary);
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  background: var(--color-background-primary);
+  transition: all 0.2s;
+}
+.pstep:hover { background: var(--color-background-tertiary); }
+.pstep.on {
+  background: var(--color-background-info);
+  color: var(--color-text-info);
+  border-color: var(--color-border-info);
+}
+
+.pmk {
+  background: var(--color-background-secondary);
+  border-radius: var(--border-radius-md);
+  padding: 10px 12px;
+}
+
+.pnav {
+  cursor: pointer;
+  padding: 6px 16px;
+  border-radius: var(--border-radius-md);
+  border: 0.5px solid var(--color-border-secondary);
+  font-size: 12px;
+  color: var(--color-text-primary);
+  background: var(--color-background-primary);
+  transition: all 0.2s;
+}
+.pnav:hover { background: var(--color-background-secondary); }
+
+.loading {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--color-border-tertiary);
+  border-top-color: var(--color-text-info);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.error {
+  background: var(--color-background-danger);
+  color: var(--color-text-danger);
+  padding: 8px 12px;
+  border-radius: var(--border-radius-md);
+  font-size: 12px;
+  margin: 10px 0;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div style="padding:1rem 0 0;">
+
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);margin-bottom:12px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="font-weight:500;font-size:14px;">IEEE 14 Bus System — デジタルツイン</span>
+        <span id="hst" style="font-size:11px;padding:2px 8px;border-radius:var(--border-radius-md);font-weight:500;background:var(--color-background-success);color:var(--color-text-success);">系統正常</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span id="apiStatus" style="font-size:11px;padding:2px 6px;border-radius:var(--border-radius-sm);background:var(--color-background-tertiary);color:var(--color-text-secondary);">API接続中...</span>
+        <span style="font-size:12px;color:var(--color-text-secondary);">PowSyBl Advanced Analysis · リアルタイム</span>
+      </div>
+    </div>
+
+    <div id="pnav" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;"></div>
+
+    <div id="errorMsg"></div>
+
+    <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.75fr);gap:12px;margin-bottom:12px;">
+      <div style="border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:14px;">
+        <div id="sct" style="font-size:11px;color:var(--color-text-secondary);"></div>
+        <div id="scti" style="font-size:15px;font-weight:500;margin:4px 0 8px;"></div>
+        <div id="scen" style="margin-bottom:10px;"></div>
+        <div id="sctx" style="font-size:13px;color:var(--color-text-secondary);line-height:1.65;"></div>
+        <div id="scmk" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px;"></div>
+      </div>
+      <div style="border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:14px;">
+        <div id="scct" style="font-size:12px;color:var(--color-text-secondary);margin-bottom:10px;font-weight:500;"></div>
+        <div id="cwrap" style="position:relative;width:100%;height:260px;">
+          <canvas id="mc"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:start;">
+      <div style="background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:12px 14px;">
+        <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:5px;font-weight:500;">システムイベントログ</div>
+        <pre id="sclog" style="font-size:11px;font-family:var(--font-mono);color:var(--color-text-secondary);margin:0;white-space:pre-wrap;line-height:1.7;"></pre>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;padding-top:4px;">
+        <button class="pnav" onclick="nav(-1)">← 前へ</button>
+        <button class="pnav" onclick="nav(1)">次へ →</button>
+        <button class="pnav" onclick="refreshData()">🔄 更新</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const API_BASE = 'http://powsybl-api-app-zone.apps-crc.testing/api/v1';
+let cur = 0, chartInst = null;
+let apiData = {
+  loadflow: null,
+  security: null,
+  sensitivity: null,
+  opf: null
+};
+
+// Scene definitions (static scenarios)
+const SCENES = [
+  {
+    id: 'loadflow',
+    time: '定常状態',
+    title: '潮流計算 — AC Newton-Raphson',
+    status: 'ok',
+    engine: 'Load Flow · AC Newton-Raphson · OpenLoadFlow',
+    text: 'OpenLoadFlowエンジンがIEEE 14母線系統の潮流計算を実行。全母線電圧は適正範囲内（0.95–1.05 p.u.）で収束し、系統は安定状態を維持しています。',
+    getMetrics: (data) => [
+      {l:'収束状態', v: data?.convergence_status || 'N/A', t: data?.convergence_status === 'CONVERGED' ? 'ok' : 'er'},
+      {l:'イテレーション数', v: data?.iterations?.toString() || 'N/A', t:'nm'},
+      {l:'計算時間', v: data ? `${data.computation_time_ms.toFixed(2)} ms` : 'N/A', t:'ok'},
+      {l:'システム損失', v: data ? `${data.losses?.active_power?.toFixed(1)} MW` : 'N/A', t:'nm'}
+    ],
+    getChart: (data) => ({
+      type: 'bar',
+      horiz: false,
+      ymin: 0.90,
+      ymax: 1.10,
+      title: '母線電圧プロファイル (p.u.)',
+      labels: data?.buses?.map(b => b.id) || [],
+      datasets: [{
+        label: '電圧 (p.u.)',
+        data: data?.buses?.map(b => b.voltage_magnitude) || [],
+        backgroundColor: '#1D9E75',
+        borderRadius: 3
+      }]
+    }),
+    getLog: (data) => {
+      const ts = new Date().toLocaleTimeString('ja-JP');
+      return data ?
+`[${ts}] Load Flow 完了  ${data.convergence_status}  ${data.iterations}回反復  ${data.computation_time_ms.toFixed(2)}ms
+[${ts}] 全${data.buses.length}母線 電圧解析完了
+[${ts}] システム損失: 有効電力 ${data.losses.active_power.toFixed(2)} MW
+[${ts}] 系統スナップショット → データベース保存完了` :
+`[${ts}] データ取得中...`;
+    }
+  },
+  {
+    id: 'security',
+    time: 'N-1 分析',
+    title: 'セキュリティ分析 — コンティンジェンシー評価',
+    status: 'wn',
+    engine: 'Security Analysis · N-1 · 並列処理',
+    text: '送電線L9-14の開放を想定したN-1セキュリティ分析。コンティンジェンシー評価を実行し、系統の脆弱性を評価します。',
+    getMetrics: (data) => [
+      {l:'総コンティンジェンシー数', v: data?.summary?.total_contingencies?.toString() || 'N/A', t:'nm'},
+      {l:'重大違反', v: data?.summary?.critical_violations?.toString() || 'N/A', t: (data?.summary?.critical_violations || 0) > 0 ? 'er' : 'ok'},
+      {l:'失敗数', v: data?.summary?.failed_contingencies?.toString() || 'N/A', t: (data?.summary?.failed_contingencies || 0) > 0 ? 'wn' : 'ok'},
+      {l:'計算時間', v: data ? `${data.summary.computation_time_ms.toFixed(2)} ms` : 'N/A', t:'ok'}
+    ],
+    getChart: (data) => {
+      // Sample data for visualization with varied loading rates
+      const loadingData = [118, 112, 107, 94, 89, 85, 82, 79];
+      // Color based on loading rate: green (<80%), yellow (80-100%), red (>100%)
+      const colors = loadingData.map(loading => {
+        if (loading > 100) return '#E24B4A'; // Red
+        if (loading > 80) return '#F0C23E';  // Yellow
+        return '#1D9E75'; // Green
+      });
+      return {
+        type: 'bar',
+        horiz: true,
+        xmin: 0,
+        xmax: 125,
+        title: 'コンティンジェンシー後の送電線負荷率 (%) — 緑:<80% 黄:80-100% 赤:>100%',
+        labels: ['L-12', 'L-15', 'T-09', 'L-08', 'L-20', 'T-03', 'L-06', 'L-18'],
+        datasets: [{
+          label: '負荷率 (%)',
+          data: loadingData,
+          backgroundColor: colors,
+          borderRadius: 3
+        }]
+      };
+    },
+    getLog: (data) => {
+      const ts = new Date().toLocaleTimeString('ja-JP');
+      return data ?
+`[${ts}] Security Analysis 起動  コンティンジェンシー: L9-14
+[${ts}] 完了  総数 ${data.summary.total_contingencies}件  ${data.summary.computation_time_ms.toFixed(2)}ms
+[${ts}] 重大違反 ${data.summary.critical_violations}件  失敗 ${data.summary.failed_contingencies}件
+[${ts}] 分析結果 → 系統運用システムへ通知送信` :
+`[${ts}] データ取得中...`;
+    }
+  },
+  {
+    id: 'sensitivity',
+    time: '感度分析',
+    title: '感度分析 — PTDF計算',
+    status: 'in',
+    engine: 'Sensitivity Analysis · PTDF · DC近似',
+    text: '電力移送分布係数(PTDF)を計算し、発電機出力変化が送電線潮流に与える影響を分析します。',
+    getMetrics: (data) => {
+      const factors = data?.factors || [];
+      const maxPtdf = factors.length > 0 ? Math.max(...factors.map(f => Math.abs(f.ptdf_value))) : 0;
+      return [
+        {l:'計算ファクター数', v: factors.length.toString(), t:'nm'},
+        {l:'最大PTDF値', v: maxPtdf.toFixed(3), t:'wn'},
+        {l:'高感度ブランチ', v: factors.filter(f => Math.abs(f.ptdf_value) > 0.2).length.toString(), t:'wn'},
+        {l:'計算時間', v: data ? `${data.computation_time_ms?.toFixed(2)} ms` : 'N/A', t:'nm'}
+      ];
+    },
+    getChart: (data) => {
+      const factors = data?.factors || [];
+      const topFactors = factors.slice(0, 10);
+      return {
+        type: 'bar',
+        horiz: true,
+        xmin: -0.5,
+        xmax: 0.5,
+        title: 'PTDF値 — 送電線別 (上位10件)',
+        labels: topFactors.map(f => f.function || 'N/A'),
+        datasets: [{
+          label: 'PTDF値',
+          data: topFactors.map(f => f.ptdf_value || 0),
+          backgroundColor: topFactors.map(f => (f.ptdf_value || 0) > 0 ? '#378ADD' : '#D85A30'),
+          borderRadius: 3
+        }]
+      };
+    },
+    getLog: (data) => {
+      const ts = new Date().toLocaleTimeString('ja-JP');
+      const factors = data?.factors || [];
+      return data ?
+`[${ts}] Sensitivity Analysis 起動  PTDF計算 (DC近似)
+[${ts}] 完了  計算ファクター数 ${factors.length}件
+[${ts}] 高感度ブランチ検出: ${factors.filter(f => Math.abs(f.ptdf_value) > 0.2).length}本
+[${ts}] 分析結果 → 系統運用システムへ通知送信` :
+`[${ts}] データ取得中...`;
+    }
+  },
+  {
+    id: 'opf',
+    time: '経済運用',
+    title: '最適潮流計算 — 経済負荷配分',
+    status: 'ok',
+    engine: 'Optimal Power Flow · IPOPT外部ソルバー',
+    text: '発電機コスト曲線をもとに総発電コストを最小化しながら電圧・熱容量制約を遵守する最適運用点を計算します。',
+    getMetrics: (data) => [
+      {l:'収束状態', v: data?.convergence_status || 'N/A', t: data?.convergence_status === 'CONVERGED' ? 'ok' : 'er'},
+      {l:'制約条件', v: data?.constraints_satisfied ? '全て満足' : '一部未満足', t: data?.constraints_satisfied ? 'ok' : 'wn'},
+      {l:'コスト削減効果', v: data ? `¥${(data.cost_breakdown?.daily_savings_million_yen || 0).toFixed(1)}M / 日` : 'N/A', t:'ok'},
+      {l:'最適化時間', v: data ? `${data.computation_time_ms?.toFixed(1)} ms` : 'N/A', t:'nm'}
+    ],
+    getChart: (data) => {
+      const gens = data?.generators || [];
+      return {
+        type: 'bar',
+        horiz: false,
+        ymin: 0,
+        ymax: Math.max(...gens.map(g => Math.max(g.current_output_mw || 0, g.optimal_output_mw || 0))) * 1.2 || 100,
+        title: '発電機別 現状出力 vs 最適出力 (MW)',
+        labels: gens.map(g => g.id || 'N/A'),
+        datasets: [
+          {label: '現状出力', data: gens.map(g => g.current_output_mw || 0), backgroundColor: '#B4B2A9', borderRadius: 3},
+          {label: '最適出力', data: gens.map(g => g.optimal_output_mw || 0), backgroundColor: '#1D9E75', borderRadius: 3}
+        ]
+      };
+    },
+    getLog: (data) => {
+      const ts = new Date().toLocaleTimeString('ja-JP');
+      return data ?
+`[${ts}] Optimal Power Flow 起動  IPOPT ソルバー
+[${ts}] 最適解収束  ${data.convergence_status}
+[${ts}] 制約条件: ${data.constraints_satisfied ? '全て満足' : '一部未満足'}
+[${ts}] 削減効果 ¥${(data.cost_breakdown?.daily_savings_million_yen || 0).toFixed(1)}M/日
+[${ts}] 運用指令 → 発電制御システムへ送信待機` :
+`[${ts}] データ取得中...`;
+    }
+  }
+];
+
+function ts(t) {
+  const bg = {ok:'var(--color-background-success)', wn:'var(--color-background-warning)', er:'var(--color-background-danger)', in:'var(--color-background-info)', nm:'var(--color-background-secondary)'};
+  const tc = {ok:'var(--color-text-success)', wn:'var(--color-text-warning)', er:'var(--color-text-danger)', in:'var(--color-text-info)', nm:'var(--color-text-secondary)'};
+  return `background:${bg[t]||bg.nm};color:${tc[t]||tc.nm}`;
+}
+
+function render(i) {
+  cur = i;
+  const s = SCENES[i];
+  const data = apiData[s.id];
+
+  document.querySelectorAll('.pstep').forEach((b, j) => b.className = 'pstep' + (j === i ? ' on' : ''));
+
+  const slabels = {ok:'系統正常', wn:'要注意', er:'制約違反', in:'分析実行中'};
+  const hst = document.getElementById('hst');
+  hst.textContent = slabels[s.status];
+  hst.style.cssText = `font-size:11px;padding:2px 8px;border-radius:var(--border-radius-md);font-weight:500;${ts(s.status)}`;
+
+  document.getElementById('sct').textContent = s.time;
+  document.getElementById('scti').textContent = s.title;
+  document.getElementById('scen').innerHTML = `<span style="font-size:11px;padding:2px 8px;border-radius:var(--border-radius-md);font-weight:500;${ts('in')}">${s.engine}</span>`;
+  document.getElementById('sctx').textContent = s.text;
+  document.getElementById('sclog').textContent = s.getLog(data);
+
+  const metrics = s.getMetrics(data);
+  const tlab = {ok:'OK', wn:'注意', er:'違反', in:'実行中', nm:''};
+  document.getElementById('scmk').innerHTML = metrics.map(m => `
+    <div class="pmk">
+      <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:4px;">${m.l}</div>
+      <div style="font-size:13px;font-weight:500;display:flex;align-items:center;justify-content:space-between;gap:4px;">
+        <span style="flex:1;">${m.v}</span>
+        ${m.t !== 'nm' ? `<span style="font-size:10px;padding:1px 5px;border-radius:4px;white-space:nowrap;${ts(m.t)}">${tlab[m.t]}</span>` : ''}
+      </div>
+    </div>
+  `).join('');
+
+  const chart = s.getChart(data);
+  document.getElementById('scct').textContent = chart.title;
+
+  if (chartInst) { chartInst.destroy(); chartInst = null; }
+  const wrap = document.getElementById('cwrap');
+  wrap.style.height = chart.horiz ? Math.max(200, chart.labels.length * 28 + 70) + 'px' : '260px';
+
+  const xCfg = {ticks:{font:{size:11}, color:'#9b9a97'}, grid:{color:'rgba(128,128,128,0.13)'}, border:{color:'rgba(128,128,128,0.2)'}};
+  const yCfg = {ticks:{font:{size:11}, color:'#9b9a97'}, grid:{color:'rgba(128,128,128,0.13)'}, border:{color:'rgba(128,128,128,0.2)'}};
+  if (chart.horiz) { xCfg.min = chart.xmin; xCfg.max = chart.xmax; }
+  else { yCfg.min = chart.ymin; yCfg.max = chart.ymax; }
+
+  chartInst = new Chart(document.getElementById('mc'), {
+    type: chart.type,
+    data: {labels: chart.labels, datasets: chart.datasets},
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      indexAxis: chart.horiz ? 'y' : 'x',
+      plugins: {
+        legend: {
+          display: chart.datasets.length > 1,
+          position: 'top',
+          labels: {font:{size:11}, boxWidth:10, padding:10, color:'#9b9a97'}
+        }
+      },
+      scales: {x: xCfg, y: yCfg}
+    }
+  });
+}
+
+function nav(d) { render((cur + d + SCENES.length) % SCENES.length); }
+
+async function fetchAPI(endpoint, method = 'GET', body = null) {
+  try {
+    const options = { method };
+    if (body) {
+      options.headers = {'Content-Type': 'application/json'};
+      options.body = JSON.stringify(body);
+    }
+    const response = await fetch(`${API_BASE}/${endpoint}`, options);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return await response.json();
+  } catch (error) {
+    console.error(`API Error (${endpoint}):`, error);
+    return null;
+  }
+}
+
+async function refreshData() {
+  const statusEl = document.getElementById('apiStatus');
+  statusEl.innerHTML = '<span class="loading"></span> 更新中...';
+  statusEl.style.background = 'var(--color-background-warning)';
+  statusEl.style.color = 'var(--color-text-warning)';
+
+  try {
+    // Fetch all API data
+    const [loadflow, security, sensitivity, opf] = await Promise.all([
+      fetchAPI('loadflow', 'POST', {network_id: 'ieee14'}),
+      fetchAPI('security', 'POST', {network_id: 'ieee14', contingencies: [{id: 'L14-trip', elements: ['L9-14-1']}]}),
+      fetchAPI('sensitivity', 'GET'),
+      fetchAPI('opf', 'GET')
+    ]);
+
+    apiData = { loadflow, security, sensitivity, opf };
+
+    // Check for errors
+    const hasError = !loadflow || !security || !sensitivity || !opf;
+    if (hasError) {
+      document.getElementById('errorMsg').innerHTML = '<div class="error">⚠️ 一部のAPIデータ取得に失敗しました。再試行してください。</div>';
+    } else {
+      document.getElementById('errorMsg').innerHTML = '';
+    }
+
+    statusEl.textContent = 'API接続正常';
+    statusEl.style.background = 'var(--color-background-success)';
+    statusEl.style.color = 'var(--color-text-success)';
+
+    render(cur); // Re-render current scene with new data
+  } catch (error) {
+    console.error('Refresh error:', error);
+    statusEl.textContent = 'API接続エラー';
+    statusEl.style.background = 'var(--color-background-danger)';
+    statusEl.style.color = 'var(--color-text-danger)';
+    document.getElementById('errorMsg').innerHTML = '<div class="error">⚠️ APIサーバーに接続できません。ネットワーク設定を確認してください。</div>';
+  }
+}
+
+// Initialize navigation
+const navLabels = ['潮流計算', 'セキュリティ分析', '感度分析', '最適潮流'];
+const pnav = document.getElementById('pnav');
+navLabels.forEach((l, i) => {
+  const b = document.createElement('button');
+  b.className = 'pstep';
+  b.textContent = l;
+  b.onclick = () => render(i);
+  pnav.appendChild(b);
+});
+
+// Initial load
+refreshData();
+</script>
+
+</body>
+</html>

@@ -75,7 +75,7 @@ data:
               "root_selector": "nodes",
               "source": "url",
               "type": "json",
-              "url": "http://10.217.5.224:8000/api/v1/network/topology",
+              "url": "/api/v1/loadflow/api/v1/network/topology",
               "url_options": {
                 "method": "GET"
               }
@@ -93,7 +93,7 @@ data:
               "root_selector": "edges",
               "source": "url",
               "type": "json",
-              "url": "http://10.217.5.224:8000/api/v1/network/topology",
+              "url": "/api/v1/loadflow/api/v1/network/topology",
               "url_options": {
                 "method": "GET"
               }
@@ -208,7 +208,7 @@ data:
               "root_selector": "nodes",
               "source": "url",
               "type": "json",
-              "url": "http://10.217.5.224:8000/api/v1/network/topology",
+              "url": "/api/v1/loadflow/api/v1/network/topology",
               "url_options": {
                 "method": "GET"
               }
@@ -314,7 +314,7 @@ data:
               "root_selector": "edges",
               "source": "url",
               "type": "json",
-              "url": "http://10.217.5.224:8000/api/v1/network/topology",
+              "url": "/api/v1/loadflow/api/v1/network/topology",
               "url_options": {
                 "method": "GET"
               }

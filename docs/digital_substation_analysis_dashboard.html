@@ -1,0 +1,201 @@
+
+<style>
+.pstep{cursor:pointer;padding:5px 10px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-tertiary);font-size:12px;color:var(--color-text-secondary);background:var(--color-background-primary);}
+.pstep.on{background:var(--color-background-info);color:var(--color-text-info);border-color:var(--color-border-info);}
+.pmk{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px 12px;}
+.pnav{cursor:pointer;padding:6px 16px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);font-size:12px;color:var(--color-text-primary);background:var(--color-background-primary);}
+.pnav:hover{background:var(--color-background-secondary);}
+</style>
+
+<div style="padding:1rem 0 0;">
+
+<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);margin-bottom:12px;">
+  <div style="display:flex;align-items:center;gap:10px;">
+    <span style="font-weight:500;font-size:14px;">北関東変電所 — 275 kV 基幹系統</span>
+    <span id="hst" style="font-size:11px;padding:2px 8px;border-radius:var(--border-radius-md);font-weight:500;background:var(--color-background-success);color:var(--color-text-success);">系統正常</span>
+  </div>
+  <span style="font-size:12px;color:var(--color-text-secondary);">PowSyBl Advanced Analysis · リアルタイム</span>
+</div>
+
+<div id="pnav" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;"></div>
+
+<div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.75fr);gap:12px;margin-bottom:12px;">
+  <div style="border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:14px;">
+    <div id="sct" style="font-size:11px;color:var(--color-text-secondary);"></div>
+    <div id="scti" style="font-size:15px;font-weight:500;margin:4px 0 8px;"></div>
+    <div id="scen" style="margin-bottom:10px;"></div>
+    <div id="sctx" style="font-size:13px;color:var(--color-text-secondary);line-height:1.65;"></div>
+    <div id="scmk" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px;"></div>
+  </div>
+  <div style="border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:14px;">
+    <div id="scct" style="font-size:12px;color:var(--color-text-secondary);margin-bottom:10px;font-weight:500;"></div>
+    <div id="cwrap" style="position:relative;width:100%;height:260px;">
+      <canvas id="mc"></canvas>
+    </div>
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:start;">
+  <div style="background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:12px 14px;">
+    <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:5px;font-weight:500;">システムイベントログ</div>
+    <pre id="sclog" style="font-size:11px;font-family:var(--font-mono);color:var(--color-text-secondary);margin:0;white-space:pre-wrap;line-height:1.7;"></pre>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:8px;padding-top:4px;">
+    <button class="pnav" onclick="nav(-1)">← 前へ</button>
+    <button class="pnav" onclick="nav(1)">次へ →</button>
+  </div>
+</div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const ptdf = [0.38,0.29,0.21,0.18,0.12,-0.08,-0.15,-0.19,-0.24,-0.31];
+const ptdfC = ptdf.map(v=>v>0?'#378ADD':'#D85A30');
+
+const SCENES = [
+  {
+    time:'06:00 JST',title:'朝番引継ぎ — 定常状態確認',status:'ok',
+    engine:'Load Flow  ·  AC Newton-Raphson  ·  OpenLoadFlow',
+    text:'夜番から業務引継ぎ。OpenLoadFlowエンジンが275kV系統84ノードの潮流計算を自動実行。全母線電圧は適正範囲内（0.95–1.05 p.u.）で収束し、損失は軽負荷水準の18.4MWを確認。送電線潮流余裕は十分で系統は安定状態を維持している。',
+    metrics:[{l:'収束状態',v:'CONVERGED',t:'ok'},{l:'最低電圧',v:'0.972 p.u.',t:'ok'},{l:'システム損失',v:'18.4 MW',t:'nm'},{l:'計算時間',v:'1.2 秒',t:'ok'}],
+    ctitle:'母線電圧プロファイル — 06:00 定常状態 (代表12母線)',
+    chart:{type:'bar',horiz:false,ymin:0.90,ymax:1.10,
+      labels:['B1','B2','B3','B4','B5','B6','B7','B8','B9','B10','B11','B12'],
+      datasets:[{label:'電圧 (p.u.)',data:[1.032,1.018,0.998,1.025,1.012,0.985,1.041,1.003,0.972,1.028,1.015,0.993],backgroundColor:'#1D9E75',borderRadius:3}]
+    },
+    log:'[06:02:14] Load Flow 完了  CONVERGED  7回反復  1.2s\n[06:02:14] 全84母線 電圧 0.95–1.05 p.u. 範囲内確認\n[06:02:15] ブランチ最大負荷率 67.3%  熱容量制約 余裕あり\n[06:02:15] 系統スナップショット → InfluxDB 保存完了'
+  },
+  {
+    time:'09:30 JST',title:'負荷上昇期 — 電圧低下監視',status:'wn',
+    engine:'Load Flow  ·  自動トリガー (5分周期)',
+    text:'朝のピーク需要上昇に伴い5分間隔でLoad Flowが自動実行。母線B9の電圧が0.952 p.u.まで低下し下限値0.95 p.u.に接近。タップ制御付き変圧器T-07が自動調整を開始し電圧を0.958 p.u.まで回復。系統運用員へ警報通知を送信した。',
+    metrics:[{l:'収束状態',v:'CONVERGED',t:'ok'},{l:'最低電圧',v:'0.952 p.u.',t:'wn'},{l:'システム損失',v:'24.7 MW',t:'nm'},{l:'変圧器タップ動作',v:'3回',t:'wn'}],
+    ctitle:'母線電圧トレンド — B9（警報）/ B3（参照） / 下限ライン',
+    chart:{type:'line',horiz:false,ymin:0.93,ymax:1.02,
+      labels:['08:00','08:30','09:00','09:15','09:30','09:45','10:00','10:15','10:30'],
+      datasets:[
+        {label:'B9 電圧',data:[0.985,0.981,0.973,0.965,0.952,0.958,0.963,0.969,0.971],borderColor:'#E24B4A',backgroundColor:'rgba(226,75,74,0.07)',tension:0.4,fill:true,pointRadius:4,pointBackgroundColor:'#E24B4A'},
+        {label:'B3 電圧',data:[1.002,0.998,0.994,0.989,0.984,0.986,0.988,0.990,0.992],borderColor:'#378ADD',backgroundColor:'transparent',tension:0.4,borderDash:[5,4],pointRadius:3},
+        {label:'電圧下限 0.95',data:[0.95,0.95,0.95,0.95,0.95,0.95,0.95,0.95,0.95],borderColor:'#E24B4A',backgroundColor:'transparent',borderDash:[8,4],pointRadius:0,borderWidth:1,fill:false}
+      ]
+    },
+    log:'[09:28:05] 負荷上昇検知  Load Flow 自動トリガー\n[09:28:07] B9 電圧 0.952 p.u.  下限警報 (閾値 0.955 p.u.)\n[09:28:08] T-07 変圧器タップ +1段  → 電圧 0.958 p.u. 回復\n[09:28:09] オペレーター通知送信  アクション確認待ち'
+  },
+  {
+    time:'12:15 JST',title:'N-1イベント — セキュリティ分析',status:'er',
+    engine:'Security Analysis  ·  N-1  ·  52コンティンジェンシー並列処理',
+    text:'275kV送電線L-14が保護リレー動作により開放。セキュリティ分析エンジンが52コンティンジェンシーを並列処理し8.3秒で評価完了。隣接するL-12・L-15・T-09に潮流が集中し熱容量制約を超過。是正措置として北部GEN-3削減・GEN-7増出力を提案し、オペレーターが承認。',
+    metrics:[{l:'コンティンジェンシー数',v:'52件',t:'nm'},{l:'制約違反',v:'3件',t:'er'},{l:'最大過負荷',v:'118%',t:'er'},{l:'分析時間',v:'8.3 秒',t:'ok'}],
+    ctitle:'N-1後 送電線負荷率 — L-14開放時  ■ 赤 = 熱容量超過 (>100%)',
+    chart:{type:'bar',horiz:true,xmin:0,xmax:135,
+      labels:['L-12','L-15','T-09','L-08','L-20','T-03','L-06','L-18'],
+      datasets:[{label:'負荷率 (%)',data:[118,112,107,94,89,85,82,79],backgroundColor:['#E24B4A','#E24B4A','#E24B4A','#1D9E75','#1D9E75','#1D9E75','#1D9E75','#1D9E75'],borderRadius:3}]
+    },
+    log:'[12:15:33] L-14 保護動作  回線開放検知\n[12:15:34] Security Analysis 自動起動  52コンティンジェンシー\n[12:15:42] 完了  制約違反 3件  L-12 118%  L-15 112%  T-09 107%\n[12:15:42] 是正措置: GEN-3 -45MW / GEN-7 +45MW\n[12:15:43] オペレーター承認 → 発電制御システムへ指令送信'
+  },
+  {
+    time:'14:45 JST',title:'風力発電変動 — 感度分析 (PTDF)',status:'wn',
+    engine:'Sensitivity Analysis  ·  PTDF  ·  DC近似',
+    text:'沖合風力発電所WF-01が急速ランプアップ（+180MW/15分）。PTDF計算によりWF-01出力1MW変化あたりの各送電線への潮流寄与率を2.1秒で算出。L-22への感度係数が0.38と最大。位相調整器PST-02による制御（-3.5度）でL-22潮流を約15MW削減可能。',
+    metrics:[{l:'風力ランプ量',v:'+180 MW',t:'wn'},{l:'PTDF最大値',v:'0.38 (L-22)',t:'wn'},{l:'高感度ブランチ',v:'3本',t:'wn'},{l:'計算時間',v:'2.1 秒',t:'ok'}],
+    ctitle:'WF-01出力変化に対するPTDF値 — 送電線別  ■ 青 = 正方向  ■ 橙 = 逆方向',
+    chart:{type:'bar',horiz:true,xmin:-0.5,xmax:0.5,
+      labels:['L-22','L-08','L-15','L-12','T-09','L-20','T-03','L-06','L-18','T-11'],
+      datasets:[{label:'PTDF値',data:ptdf,backgroundColor:ptdfC,borderRadius:3}]
+    },
+    log:'[14:43:10] WF-01 出力急上昇検知  +180MW 予測 (15分以内)\n[14:43:11] Sensitivity Analysis 起動  PTDF計算 (DC近似)\n[14:43:13] 完了  L-22 PTDF=0.38  L-08 PTDF=0.29  高感度検出\n[14:43:13] PST-02 推奨制御 -3.5度  → L-22 潮流 -15MW 推定\n[14:43:14] 電力取引所向け制約情報 通知送信完了'
+  },
+  {
+    time:'16:30 JST',title:'夕方ピーク前 — 経済運用最適化',status:'in',
+    engine:'Optimal Dispatch  ·  IPOPT外部ソルバー  (Phase 2 拡張機能)',
+    text:'夕方ピーク需要（予測1,850MW）に向けた経済負荷配分を最適化。発電機コスト曲線をもとに総発電コストを最小化しながら電圧・熱容量制約を遵守。GEN-2とGEN-4の出力を引き上げ、限界費用の高いGEN-3とGEN-6を削減することで、現状運用比で310万円/日のコスト削減を実現。',
+    metrics:[{l:'最適化目標',v:'発電コスト最小',t:'in'},{l:'コスト削減効果',v:'¥3.1M / 日',t:'ok'},{l:'有効制約数',v:'7件',t:'wn'},{l:'収束',v:'IPOPT · 38回',t:'ok'}],
+    ctitle:'発電機別 現状出力 vs 最適出力 (MW) — 経済負荷配分',
+    chart:{type:'bar',horiz:false,ymin:0,ymax:400,
+      labels:['GEN-1','GEN-2','GEN-3','GEN-4','GEN-5','GEN-6','GEN-7'],
+      datasets:[
+        {label:'現状出力',data:[320,285,340,210,175,290,230],backgroundColor:'#B4B2A9',borderRadius:3},
+        {label:'最適出力',data:[295,310,275,245,190,270,265],backgroundColor:'#1D9E75',borderRadius:3}
+      ]
+    },
+    log:'[16:28:30] 夕方ピーク予測ロード完了  需要予測 1,850MW\n[16:28:31] Optimal Dispatch 起動  IPOPT ソルバー\n[16:28:38] 最適解収束  有効制約 7件  削減効果 ¥3.1M/日\n[16:28:38] 運用指令: GEN-2 +25MW  GEN-4 +35MW  GEN-3 -65MW\n[16:28:39] オペレーター最終確認 → 発電制御システムへ送信待機'
+  }
+];
+
+let cur = 0, chartInst = null;
+
+function ts(t) {
+  const bg={ok:'var(--color-background-success)',wn:'var(--color-background-warning)',er:'var(--color-background-danger)',in:'var(--color-background-info)',nm:'var(--color-background-secondary)'};
+  const tc={ok:'var(--color-text-success)',wn:'var(--color-text-warning)',er:'var(--color-text-danger)',in:'var(--color-text-info)',nm:'var(--color-text-secondary)'};
+  return `background:${bg[t]||bg.nm};color:${tc[t]||tc.nm}`;
+}
+
+function render(i) {
+  cur = i;
+  const s = SCENES[i];
+  document.querySelectorAll('.pstep').forEach((b,j)=>b.className='pstep'+(j===i?' on':''));
+
+  const slabels={ok:'系統正常',wn:'要注意',er:'制約違反',in:'最適化中'};
+  const hst = document.getElementById('hst');
+  hst.textContent = slabels[s.status];
+  hst.style.cssText = `font-size:11px;padding:2px 8px;border-radius:var(--border-radius-md);font-weight:500;${ts(s.status)}`;
+
+  document.getElementById('sct').textContent = s.time;
+  document.getElementById('scti').textContent = s.title;
+  document.getElementById('scen').innerHTML = `<span style="font-size:11px;padding:2px 8px;border-radius:var(--border-radius-md);font-weight:500;${ts('in')}">${s.engine}</span>`;
+  document.getElementById('sctx').textContent = s.text;
+  document.getElementById('sclog').textContent = s.log;
+  document.getElementById('scct').textContent = s.ctitle;
+
+  const tlab={ok:'OK',wn:'注意',er:'違反',in:'実行中',nm:''};
+  document.getElementById('scmk').innerHTML = s.metrics.map(m=>`
+    <div class="pmk">
+      <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:4px;">${m.l}</div>
+      <div style="font-size:13px;font-weight:500;display:flex;align-items:center;justify-content:space-between;gap:4px;">
+        <span style="flex:1;">${m.v}</span>
+        ${m.t!=='nm'?`<span style="font-size:10px;padding:1px 5px;border-radius:4px;white-space:nowrap;${ts(m.t)}">${tlab[m.t]}</span>`:''}
+      </div>
+    </div>
+  `).join('');
+
+  if (chartInst) { chartInst.destroy(); chartInst = null; }
+  const c = s.chart;
+  const wrap = document.getElementById('cwrap');
+  wrap.style.height = c.horiz ? Math.max(200, c.labels.length * 28 + 70) + 'px' : '260px';
+
+  const xCfg = {ticks:{font:{size:11},color:'#9b9a97'},grid:{color:'rgba(128,128,128,0.13)'},border:{color:'rgba(128,128,128,0.2)'}};
+  const yCfg = {ticks:{font:{size:11},color:'#9b9a97'},grid:{color:'rgba(128,128,128,0.13)'},border:{color:'rgba(128,128,128,0.2)'}};
+  if (c.horiz) { xCfg.min=c.xmin; xCfg.max=c.xmax; } else { yCfg.min=c.ymin; yCfg.max=c.ymax; }
+
+  chartInst = new Chart(document.getElementById('mc'), {
+    type: c.type,
+    data: {labels:c.labels, datasets:c.datasets},
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      indexAxis: c.horiz ? 'y' : 'x',
+      plugins:{
+        legend:{
+          display:c.datasets.length>1, position:'top',
+          labels:{font:{size:11},boxWidth:10,padding:10,color:'#9b9a97'}
+        }
+      },
+      scales:{x:xCfg, y:yCfg}
+    }
+  });
+}
+
+function nav(d) { render((cur+d+SCENES.length)%SCENES.length); }
+
+const navLabels=['06:00 定常確認','09:30 電圧監視','12:15 N-1 分析','14:45 感度分析','16:30 最適化'];
+const pnav = document.getElementById('pnav');
+navLabels.forEach((l,i)=>{
+  const b = document.createElement('button');
+  b.className = 'pstep';
+  b.textContent = l;
+  b.onclick = ()=>render(i);
+  pnav.appendChild(b);
+});
+
+render(0);
+</script>

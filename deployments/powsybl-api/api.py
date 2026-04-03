@@ -4,6 +4,7 @@ PowSyBl-like Power System Analysis API
 電力系統解析APIのシンプル実装
 """
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
 from datetime import datetime, timedelta
@@ -12,6 +13,15 @@ import os
 import redis
 
 app = FastAPI(title="Substation Analysis API", version="1.0.0")
+
+# CORS設定 - ダッシュボードからのアクセスを許可
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # 本番環境では具体的なオリジンを指定
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # InfluxDB設定
 INFLUXDB_URL = os.environ.get('INFLUXDB_URL', 'http://influxdb.data-zone.svc.cluster.local:8086')
@@ -393,6 +403,22 @@ class SensitivityAnalysisResult(BaseModel):
     network_id: str
     factor_count: int
     computation_time_ms: float
+    factors: Optional[List[Dict[str, Any]]] = None
+
+class OptimalPowerFlowRequest(BaseModel):
+    network_id: str = "ieee14"
+    objective: str = "MIN_GENERATION_COST"
+    parameters: Optional[Dict[str, Any]] = None
+
+class OptimalPowerFlowResult(BaseModel):
+    timestamp: str
+    network_id: str
+    convergence_status: str
+    objective_value: float
+    computation_time_ms: float
+    generators: List[Dict[str, Any]]
+    cost_breakdown: Dict[str, float]
+    constraints_satisfied: bool
 
 
 def generate_ieee14_mock_data():
@@ -548,10 +574,12 @@ async def run_security_analysis(request: Optional[SecurityAnalysisRequest] = Non
 @app.post("/api/v1/sensitivity", response_model=SensitivityAnalysisResult)
 async def run_sensitivity_analysis(request: Optional[SensitivityAnalysisRequest] = None, network_id: str = "default"):
     """
-    感度分析を実行（モック実装）
+    感度分析を実行（PTDF係数計算を含む）（モック実装）
     GETとPOSTの両方をサポート
     """
     import time
+    import random
+    random.seed(42)
     start_time = time.time()
 
     try:
@@ -560,6 +588,41 @@ async def run_sensitivity_analysis(request: Optional[SensitivityAnalysisRequest]
         if request and request.factors:
             factor_count = len(request.factors)
 
+        # PTDF係数のモックデータを生成（ナラティブシーン4用）
+        # WF-01(風力発電)の出力変化がL-22に与える影響
+        ptdf_factors = [
+            {
+                "variable": "WF-01",
+                "function": "L-22",
+                "ptdf_value": 0.38,
+                "description": "WF-01が1MW増えるとL-22の潮流は0.38MW増える"
+            },
+            {
+                "variable": "WF-01",
+                "function": "L-15",
+                "ptdf_value": 0.25,
+                "description": "WF-01が1MW増えるとL-15の潮流は0.25MW増える"
+            },
+            {
+                "variable": "GEN-3",
+                "function": "L-12",
+                "ptdf_value": 0.42,
+                "description": "GEN-3が1MW増えるとL-12の潮流は0.42MW増える"
+            },
+            {
+                "variable": "GEN-7",
+                "function": "L-12",
+                "ptdf_value": -0.35,
+                "description": "GEN-7が1MW増えるとL-12の潮流は0.35MW減る"
+            },
+            {
+                "variable": "LOAD-9",
+                "function": "L-14",
+                "ptdf_value": 0.28,
+                "description": "LOAD-9が1MW増えるとL-14の潮流は0.28MW増える"
+            }
+        ]
+
         computation_time = (time.time() - start_time) * 1000
 
         nw_id = request.network_id if request else network_id
@@ -567,12 +630,119 @@ async def run_sensitivity_analysis(request: Optional[SensitivityAnalysisRequest]
         return SensitivityAnalysisResult(
             timestamp=datetime.utcnow().isoformat() + "Z",
             network_id=nw_id,
-            factor_count=factor_count,
-            computation_time_ms=round(computation_time, 2)
+            factor_count=len(ptdf_factors),
+            computation_time_ms=round(computation_time, 2),
+            factors=ptdf_factors
         )
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Sensitivity analysis failed: {str(e)}")
+
+
+@app.get("/api/v1/opf", response_model=OptimalPowerFlowResult)
+@app.post("/api/v1/opf", response_model=OptimalPowerFlowResult)
+async def run_optimal_power_flow(request: Optional[OptimalPowerFlowRequest] = None, network_id: str = "default"):
+    """
+    最適潮流計算を実行（モック実装）
+    ナラティブシーン5用：経済的最適化と310万円/日のコスト削減提案
+    GETとPOSTの両方をサポート
+    """
+    import time
+    import random
+    random.seed(42)
+    start_time = time.time()
+
+    try:
+        nw_id = request.network_id if request else network_id
+
+        # IEEE 14バスシステムの5つの発電機データ（ナラティブに基づく）
+        # GEN-1, GEN-2, GEN-3, GEN-6, GEN-8
+        generators = [
+            {
+                "id": "GEN-1",
+                "bus": "Bus1",
+                "current_output_mw": 232.4,
+                "optimal_output_mw": 232.4,
+                "marginal_cost_yen_per_mwh": 12500,
+                "min_mw": 0,
+                "max_mw": 332.4,
+                "optimization": "Slack bus - reference"
+            },
+            {
+                "id": "GEN-2",
+                "bus": "Bus2",
+                "current_output_mw": 30.0,
+                "optimal_output_mw": 60.0,
+                "marginal_cost_yen_per_mwh": 8200,
+                "min_mw": 0,
+                "max_mw": 140.0,
+                "optimization": "Increase +30MW (低コスト優先)"
+            },
+            {
+                "id": "GEN-3",
+                "bus": "Bus3",
+                "current_output_mw": 45.0,
+                "optimal_output_mw": 0.0,
+                "marginal_cost_yen_per_mwh": 18900,
+                "min_mw": 0,
+                "max_mw": 100.0,
+                "optimization": "Reduce -45MW (高コスト抑制)"
+            },
+            {
+                "id": "GEN-6",
+                "bus": "Bus6",
+                "current_output_mw": 25.0,
+                "optimal_output_mw": 0.0,
+                "marginal_cost_yen_per_mwh": 17500,
+                "min_mw": 0,
+                "max_mw": 100.0,
+                "optimization": "Reduce -25MW (高コスト抑制)"
+            },
+            {
+                "id": "GEN-8",
+                "bus": "Bus8",
+                "current_output_mw": 0.0,
+                "optimal_output_mw": 45.0,
+                "marginal_cost_yen_per_mwh": 9100,
+                "min_mw": 0,
+                "max_mw": 100.0,
+                "optimization": "Increase +45MW (低コスト優先)"
+            }
+        ]
+
+        # コスト計算
+        current_daily_cost = sum(
+            g["current_output_mw"] * g["marginal_cost_yen_per_mwh"] * 24 / 1000000
+            for g in generators
+        )
+        optimal_daily_cost = sum(
+            g["optimal_output_mw"] * g["marginal_cost_yen_per_mwh"] * 24 / 1000000
+            for g in generators
+        )
+        daily_savings = current_daily_cost - optimal_daily_cost
+
+        cost_breakdown = {
+            "current_daily_cost_million_yen": round(current_daily_cost, 2),
+            "optimal_daily_cost_million_yen": round(optimal_daily_cost, 2),
+            "daily_savings_million_yen": round(daily_savings, 2),
+            "annual_savings_million_yen": round(daily_savings * 365, 2)
+        }
+
+        computation_time = (time.time() - start_time) * 1000
+
+        return OptimalPowerFlowResult(
+            timestamp=datetime.utcnow().isoformat() + "Z",
+            network_id=nw_id,
+            convergence_status="CONVERGED",
+            objective_value=optimal_daily_cost,
+            computation_time_ms=round(computation_time, 2),
+            generators=generators,
+            cost_breakdown=cost_breakdown,
+            constraints_satisfied=True
+        )
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"OPF failed: {str(e)}")
 
 
 @app.get("/api/v1/networks")

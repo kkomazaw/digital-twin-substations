@@ -1,14 +1,12 @@
-FROM python:3.11-slim
+FROM registry.access.redhat.com/ubi9/python-311:latest
 
 WORKDIR /app
 
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
 
 COPY edge_collector.py .
-
-# OpenShift対応：ランダムユーザーIDでも読み取り可能にする
-RUN chmod -R g+rwX /app
 
 EXPOSE 8888
 

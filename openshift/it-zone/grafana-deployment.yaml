@@ -11,7 +11,7 @@ data:
       type: influxdb
       uid: influxdb
       access: proxy
-      url: http://influxdb.data-zone.svc.cluster.local:8086
+      url: http://10.217.5.116:8086
       jsonData:
         version: Flux
         organization: substation
@@ -23,7 +23,7 @@ data:
       type: yesoreyeram-infinity-datasource
       uid: powsybl-api
       access: proxy
-      url: http://powsybl-api.app-zone.svc.cluster.local:8000
+      url: http://10.217.5.224:8000
       jsonData:
         tlsSkipVerify: true
       editable: true
@@ -268,7 +268,8 @@ spec:
         effect: "NoSchedule"
       containers:
       - name: grafana
-        image: docker.io/grafana/grafana:10.2.0
+        image: image-registry.openshift-image-registry.svc:5000/it-zone/grafana:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 3000
         env:
@@ -276,8 +277,6 @@ spec:
           value: admin
         - name: GF_SECURITY_ADMIN_PASSWORD
           value: admin
-        - name: GF_INSTALL_PLUGINS
-          value: "yesoreyeram-infinity-datasource"
         resources:
           requests:
             cpu: 100m
@@ -302,6 +301,8 @@ spec:
           mountPath: /var/lib/grafana/dashboards/analysis
         - name: grafana-dashboard-network-topology
           mountPath: /var/lib/grafana/dashboards/network-topology
+        - name: grafana-dashboard-demo-narrative
+          mountPath: /var/lib/grafana/dashboards/demo-narrative
       volumes:
       - name: grafana-storage
         emptyDir: {}
@@ -326,6 +327,9 @@ spec:
       - name: grafana-dashboard-network-topology
         configMap:
           name: grafana-dashboard-network-topology
+      - name: grafana-dashboard-demo-narrative
+        configMap:
+          name: grafana-dashboard-demo-narrative
 ---
 apiVersion: route.openshift.io/v1
 kind: Route
@@ -338,3 +342,38 @@ spec:
     name: grafana
   port:
     targetPort: http
+---
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: grafana
+  namespace: it-zone
+spec:
+  output:
+    to:
+      kind: ImageStreamTag
+      name: grafana:latest
+  source:
+    type: Binary
+    binary: {}
+  strategy:
+    type: Docker
+    dockerStrategy:
+      dockerfilePath: Dockerfile
+  resources:
+    limits:
+      cpu: 500m
+      memory: 1Gi
+    requests:
+      cpu: 100m
+      memory: 512Mi
+  triggers: []
+---
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: grafana
+  namespace: it-zone
+spec:
+  lookupPolicy:
+    local: true

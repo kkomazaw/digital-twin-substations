@@ -66,7 +66,7 @@ spec:
         - name: DATA_INTERVAL
           value: "1.0"
         - name: OUTPUT_HOST
-          value: "edge-collector.edge-zone.svc.cluster.local"
+          value: "10.217.4.123"
         - name: OUTPUT_PORT
           value: "8888"
         resources:

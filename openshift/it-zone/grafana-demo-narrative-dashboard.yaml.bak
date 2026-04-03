@@ -1,0 +1,1360 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-demo-narrative
+  namespace: it-zone
+data:
+  demo-narrative.json: |
+    {
+      "annotations": {
+        "list": [
+          {
+            "builtIn": 1,
+            "datasource": {
+              "type": "grafana",
+              "uid": "-- Grafana --"
+            },
+            "enable": true,
+            "hide": true,
+            "iconColor": "rgba(0, 211, 255, 1)",
+            "name": "Annotations & Alerts",
+            "type": "dashboard"
+          }
+        ]
+      },
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 1,
+      "id": null,
+      "links": [],
+      "liveNow": true,
+      "panels": [
+        {
+          "datasource": null,
+          "gridPos": {
+            "h": 3,
+            "w": 24,
+            "x": 0,
+            "y": 0
+          },
+          "id": 100,
+          "options": {
+            "code": {
+              "language": "plaintext",
+              "showLineNumbers": false,
+              "showMiniMap": false
+            },
+            "content": "# 次世代デジタル変電所 — 高度分析業務のナラティブ\n\nこのダッシュボードは、ある一日の系統運用員の実際の業務フローを5つのシーンで表現しています。各セクションは時系列に沿って配置されており、PowSyBlによる高度分析が系統運用をどのように変革するかを示します。",
+            "mode": "markdown"
+          },
+          "pluginVersion": "10.2.0",
+          "title": "デモナラティブ概要",
+          "type": "text"
+        },
+        {
+          "datasource": null,
+          "gridPos": {
+            "h": 2,
+            "w": 24,
+            "x": 0,
+            "y": 3
+          },
+          "id": 101,
+          "options": {
+            "code": {
+              "language": "plaintext",
+              "showLineNumbers": false,
+              "showMiniMap": false
+            },
+            "content": "## シーン1: 朝、系統を「読む」時間 (06:00)\n\n夜間に自動実行されたLoad Flowの結果がすでに画面に展開されている。84ノードの電圧プロファイルはすべて緑——これは「異常なし」ではなく、「今日の出発点」を意味する。",
+            "mode": "markdown"
+          },
+          "pluginVersion": "10.2.0",
+          "title": "シーン1ヘッダー",
+          "type": "text"
+        },
+        {
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "powsybl-api"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [
+                {
+                  "options": {
+                    "CONVERGED": {
+                      "color": "green",
+                      "index": 0,
+                      "text": "収束"
+                    },
+                    "PARTIALLY_CONVERGED": {
+                      "color": "yellow",
+                      "index": 1,
+                      "text": "部分収束"
+                    },
+                    "FAILED": {
+                      "color": "red",
+                      "index": 2,
+                      "text": "失敗"
+                    }
+                  },
+                  "type": "value"
+                }
+              ],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              }
+            }
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 4,
+            "x": 0,
+            "y": 5
+          },
+          "id": 1,
+          "options": {
+            "colorMode": "background",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "/^convergence_status$/"
+            },
+            "textMode": "value_and_name"
+          },
+          "pluginVersion": "10.2.0",
+          "targets": [
+            {
+              "columns": [],
+              "datasource": {
+                "type": "yesoreyeram-infinity-datasource",
+                "uid": "powsybl-api"
+              },
+              "filters": [],
+              "format": "table",
+              "global_query_id": "",
+              "refId": "A",
+              "root_selector": "",
+              "source": "url",
+              "type": "json",
+              "url": "http://10.217.5.224:8000/api/v1/loadflow",
+              "url_options": {
+                "data": "{\"network_id\":\"ieee14\"}",
+                "method": "POST",
+                "headers": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ]
+              }
+            }
+          ],
+          "title": "潮流計算 収束状態",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "powsybl-api"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 5
+                  },
+                  {
+                    "color": "red",
+                    "value": 10
+                  }
+                ]
+              },
+              "unit": "none"
+            }
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 4,
+            "x": 4,
+            "y": 5
+          },
+          "id": 2,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "/^iterations$/"
+            },
+            "textMode": "value_and_name"
+          },
+          "pluginVersion": "10.2.0",
+          "targets": [
+            {
+              "columns": [],
+              "datasource": {
+                "type": "yesoreyeram-infinity-datasource",
+                "uid": "powsybl-api"
+              },
+              "filters": [],
+              "format": "table",
+              "global_query_id": "",
+              "refId": "A",
+              "root_selector": "",
+              "source": "url",
+              "type": "json",
+              "url": "http://10.217.5.224:8000/api/v1/loadflow",
+              "url_options": {
+                "data": "{\"network_id\":\"ieee14\"}",
+                "method": "POST",
+                "headers": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ]
+              }
+            }
+          ],
+          "title": "計算イテレーション数",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "powsybl-api"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "ms"
+            }
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 4,
+            "x": 8,
+            "y": 5
+          },
+          "id": 3,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "/^computation_time_ms$/"
+            },
+            "textMode": "value_and_name"
+          },
+          "pluginVersion": "10.2.0",
+          "targets": [
+            {
+              "columns": [],
+              "datasource": {
+                "type": "yesoreyeram-infinity-datasource",
+                "uid": "powsybl-api"
+              },
+              "filters": [],
+              "format": "table",
+              "global_query_id": "",
+              "refId": "A",
+              "root_selector": "",
+              "source": "url",
+              "type": "json",
+              "url": "http://10.217.5.224:8000/api/v1/loadflow",
+              "url_options": {
+                "data": "{\"network_id\":\"ieee14\"}",
+                "method": "POST",
+                "headers": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ]
+              }
+            }
+          ],
+          "title": "計算時間",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "powsybl-api"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "color-background"
+                },
+                "inspect": false
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "red",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 0.95
+                  },
+                  {
+                    "color": "green",
+                    "value": 1.0
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 1.05
+                  },
+                  {
+                    "color": "red",
+                    "value": 1.1
+                  }
+                ]
+              },
+              "unit": "none"
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "voltage_magnitude"
+                },
+                "properties": [
+                  {
+                    "id": "displayName",
+                    "value": "電圧 (p.u.)"
+                  },
+                  {
+                    "id": "decimals",
+                    "value": 3
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "voltage_angle"
+                },
+                "properties": [
+                  {
+                    "id": "displayName",
+                    "value": "位相角 (deg)"
+                  },
+                  {
+                    "id": "decimals",
+                    "value": 1
+                  },
+                  {
+                    "id": "custom.cellOptions",
+                    "value": {
+                      "type": "auto"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 5
+          },
+          "id": 4,
+          "options": {
+            "cellHeight": "sm",
+            "footer": {
+              "countRows": false,
+              "fields": "",
+              "reducer": [
+                "sum"
+              ],
+              "show": false
+            },
+            "showHeader": true
+          },
+          "pluginVersion": "10.2.0",
+          "targets": [
+            {
+              "columns": [],
+              "datasource": {
+                "type": "yesoreyeram-infinity-datasource",
+                "uid": "powsybl-api"
+              },
+              "filters": [],
+              "format": "table",
+              "global_query_id": "",
+              "refId": "A",
+              "root_selector": "buses",
+              "source": "url",
+              "type": "json",
+              "url": "http://10.217.5.224:8000/api/v1/loadflow",
+              "url_options": {
+                "data": "{\"network_id\":\"ieee14\"}",
+                "method": "POST",
+                "headers": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ]
+              }
+            }
+          ],
+          "title": "14バス電圧プロファイル (今日の出発点)",
+          "type": "table"
+        },
+        {
+          "datasource": null,
+          "gridPos": {
+            "h": 2,
+            "w": 24,
+            "x": 0,
+            "y": 13
+          },
+          "id": 102,
+          "options": {
+            "code": {
+              "language": "plaintext",
+              "showLineNumbers": false,
+              "showMiniMap": false
+            },
+            "content": "## シーン2: 需要が動き始める時間 (09:30)\n\n朝のピーク需要が立ち上がると、Load Flowが5分ごとに自動トリガーされる。B9母線のトレンドを見ていると、電圧が0.952 p.u.まで静かに降下してくる。デジタルツインは「このままあと2回の計算サイクルで下限を割る」という未来を先読みし、変圧器タップ制御を自律的に起動する。",
+            "mode": "markdown"
+          },
+          "pluginVersion": "10.2.0",
+          "title": "シーン2ヘッダー",
+          "type": "text"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "influxdb"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisCenteredZero": false,
+                "axisColorMode": "text",
+                "axisLabel": "Voltage (p.u.)",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 20,
+                "gradientMode": "opacity",
+                "hideFrom": {
+                  "tooltip": false,
+                  "viz": false,
+                  "legend": false
+                },
+                "lineInterpolation": "smooth",
+                "lineWidth": 3,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "never",
+                "spanNulls": true,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "line"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "red",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 0.95
+                  },
+                  {
+                    "color": "green",
+                    "value": 0.97
+                  }
+                ]
+              },
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 15
+          },
+          "id": 5,
+          "options": {
+            "legend": {
+              "calcs": ["mean", "lastNotNull", "min"],
+              "displayMode": "table",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          },
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "influxdb"
+              },
+              "query": "import \"math\"\n\nfrom(bucket: \"telemetry\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"substation_telemetry\")\n  |> filter(fn: (r) => r[\"_field\"] == \"voltage_a\")\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> map(fn: (r) => ({ r with _value: math.abs(x: r._value) / 22000.0 }))",
+              "refId": "A"
+            }
+          ],
+          "title": "Bus9母線 電圧トレンド (予防的介入の転換点)",
+          "type": "timeseries"
+        },
+        {
+          "datasource": null,
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 15
+          },
+          "id": 6,
+          "options": {
+            "code": {
+              "language": "plaintext",
+              "showLineNumbers": false,
+              "showMiniMap": false
+            },
+            "content": "### 予測と自律制御\n\n**現在の電圧:** 0.952 p.u.\n\n**予測:**\n- 次回計算(5分後): 0.948 p.u. (予測)\n- 2回後(10分後): **0.943 p.u.** (下限0.95を割る)\n\n**自律制御:**\n- 変圧器タップ制御を起動\n- タップ位置: +2段 → +3段へ変更\n- 予想電圧回復: 0.968 p.u.\n\n**系統運用の転換:**\n- 旧: 閾値超過後に警報 → 事後対応\n- 新: 未来予測 → **予防的介入**",
+            "mode": "markdown"
+          },
+          "pluginVersion": "10.2.0",
+          "title": "予防的介入の詳細",
+          "type": "text"
+        },
+        {
+          "datasource": null,
+          "gridPos": {
+            "h": 2,
+            "w": 24,
+            "x": 0,
+            "y": 23
+          },
+          "id": 103,
+          "options": {
+            "code": {
+              "language": "plaintext",
+              "showLineNumbers": false,
+              "showMiniMap": false
+            },
+            "content": "## シーン3: 想定外の一撃 (12:15)\n\nL-14が保護リレー動作で開放する。PowSyBlのセキュリティ分析エンジンは**8.3秒で52コンティンジェンシーを並列評価し**、L-12・L-15・T-09の3本の制約違反を特定、さらに「GEN-3を45MW削減しGEN-7を45MW増出力すれば違反が解消する」という是正措置案まで提示する。",
+            "mode": "markdown"
+          },
+          "pluginVersion": "10.2.0",
+          "title": "シーン3ヘッダー",
+          "type": "text"
+        },
+        {
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "powsybl-api"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 1
+                  }
+                ]
+              }
+            }
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 0,
+            "y": 25
+          },
+          "id": 7,
+          "options": {
+            "colorMode": "background",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "/^summary\\.total_contingencies$/"
+            },
+            "textMode": "value_and_name"
+          },
+          "pluginVersion": "10.2.0",
+          "targets": [
+            {
+              "columns": [],
+              "datasource": {
+                "type": "yesoreyeram-infinity-datasource",
+                "uid": "powsybl-api"
+              },
+              "filters": [],
+              "format": "table",
+              "global_query_id": "",
+              "refId": "A",
+              "root_selector": "",
+              "source": "url",
+              "type": "json",
+              "url": "http://10.217.5.224:8000/api/v1/security",
+              "url_options": {
+                "data": "{\"network_id\":\"ieee14\",\"contingencies\":[{\"id\":\"L14-trip\",\"elements\":[\"L9-14-1\"]}]}",
+                "method": "POST",
+                "headers": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ]
+              }
+            }
+          ],
+          "title": "評価コンティンジェンシー数",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "powsybl-api"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "yellow",
+                    "value": 1
+                  },
+                  {
+                    "color": "red",
+                    "value": 3
+                  }
+                ]
+              },
+              "unit": "ms"
+            }
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 6,
+            "x": 6,
+            "y": 25
+          },
+          "id": 8,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "area",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "/^summary\\.computation_time_ms$/"
+            },
+            "textMode": "value_and_name"
+          },
+          "pluginVersion": "10.2.0",
+          "targets": [
+            {
+              "columns": [],
+              "datasource": {
+                "type": "yesoreyeram-infinity-datasource",
+                "uid": "powsybl-api"
+              },
+              "filters": [],
+              "format": "table",
+              "global_query_id": "",
+              "refId": "A",
+              "root_selector": "",
+              "source": "url",
+              "type": "json",
+              "url": "http://10.217.5.224:8000/api/v1/security",
+              "url_options": {
+                "data": "{\"network_id\":\"ieee14\",\"contingencies\":[{\"id\":\"L14-trip\",\"elements\":[\"L9-14-1\"]}]}",
+                "method": "POST",
+                "headers": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ]
+              }
+            }
+          ],
+          "title": "セキュリティ分析 計算時間",
+          "type": "stat"
+        },
+        {
+          "datasource": null,
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 25
+          },
+          "id": 9,
+          "options": {
+            "code": {
+              "language": "plaintext",
+              "showLineNumbers": false,
+              "showMiniMap": false
+            },
+            "content": "### セキュリティ分析結果\n\n**トリガーイベント:** L-14 保護リレー動作・開放\n\n**N-1分析結果 (8.3秒で完了):**\n\n**制約違反機器:**\n1. **L-12** - 過負荷 112% (定格比)\n2. **L-15** - 過負荷 108%\n3. **T-09** - 変圧器過負荷 105%\n\n**是正措置提案 (AI推奨):**\n- **GEN-3**: 現在出力45MW → **0MW** (△45MW削減)\n- **GEN-7**: 現在出力0MW → **45MW** (△45MW増出力)\n\n**効果予測:**\n- L-12負荷率: 112% → 94%\n- L-15負荷率: 108% → 97%\n- T-09負荷率: 105% → 98%\n\n**オペレーターの役割:** 提案を承認するか否かの判断",
+            "mode": "markdown"
+          },
+          "pluginVersion": "10.2.0",
+          "title": "是正措置提案",
+          "type": "text"
+        },
+        {
+          "datasource": null,
+          "gridPos": {
+            "h": 2,
+            "w": 24,
+            "x": 0,
+            "y": 33
+          },
+          "id": 104,
+          "options": {
+            "code": {
+              "language": "plaintext",
+              "showLineNumbers": false,
+              "showMiniMap": false
+            },
+            "content": "## シーン4: 見えなかった影響を可視化する (14:45)\n\n風力発電が急速にランプアップしていく。送電線のどこに、どれだけ潮流が乗るのか——このPTDF（電力移送分布係数）の計算こそ、再生可能エネルギー大量導入時代の系統運用の核心課題だ。感度分析エンジンは2.1秒でL-22の感度係数0.38を算出する。",
+            "mode": "markdown"
+          },
+          "pluginVersion": "10.2.0",
+          "title": "シーン4ヘッダー",
+          "type": "text"
+        },
+        {
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "powsybl-api"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                },
+                "inspect": false
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "ptdf_value"
+                },
+                "properties": [
+                  {
+                    "id": "displayName",
+                    "value": "PTDF係数"
+                  },
+                  {
+                    "id": "custom.cellOptions",
+                    "value": {
+                      "type": "gauge"
+                    }
+                  },
+                  {
+                    "id": "min",
+                    "value": -1
+                  },
+                  {
+                    "id": "max",
+                    "value": 1
+                  },
+                  {
+                    "id": "decimals",
+                    "value": 2
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 35
+          },
+          "id": 10,
+          "options": {
+            "cellHeight": "sm",
+            "footer": {
+              "countRows": false,
+              "fields": "",
+              "reducer": [
+                "sum"
+              ],
+              "show": false
+            },
+            "showHeader": true
+          },
+          "pluginVersion": "10.2.0",
+          "targets": [
+            {
+              "columns": [],
+              "datasource": {
+                "type": "yesoreyeram-infinity-datasource",
+                "uid": "powsybl-api"
+              },
+              "filters": [],
+              "format": "table",
+              "global_query_id": "",
+              "refId": "A",
+              "root_selector": "factors",
+              "source": "url",
+              "type": "json",
+              "url": "http://10.217.5.224:8000/api/v1/sensitivity",
+              "url_options": {
+                "method": "GET"
+              }
+            }
+          ],
+          "title": "PTDF係数マトリクス (電力移送分布係数)",
+          "type": "table"
+        },
+        {
+          "datasource": null,
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 35
+          },
+          "id": 11,
+          "options": {
+            "code": {
+              "language": "plaintext",
+              "showLineNumbers": false,
+              "showMiniMap": false
+            },
+            "content": "### 感度分析結果と制御アクション\n\n**WF-01 (風力発電) ランプアップ:**\n- 現在出力: 0MW\n- 予測出力(15分後): 50MW\n- ランプレート: +10MW/3分\n\n**L-22への影響:**\n- **PTDF係数: 0.38**\n- 意味: WF-01が1MW増えると、L-22の潮流は0.38MW増える\n- 50MW増加時の影響: **+19MW** (L-22に追加潮流)\n\n**位相調整器の最適制御:**\n- 対象機器: PST-05 (Phase Shifting Transformer)\n- 現在位相角: 0.0度\n- 最適位相角: **-3.5度**\n- 効果: L-22の潮流を12MW軽減\n\n**複雑な物理現象を直感的に理解:**\n- 数値が具体的アクションに直結",
+            "mode": "markdown"
+          },
+          "pluginVersion": "10.2.0",
+          "title": "位相調整器制御指令",
+          "type": "text"
+        },
+        {
+          "datasource": null,
+          "gridPos": {
+            "h": 2,
+            "w": 24,
+            "x": 0,
+            "y": 43
+          },
+          "id": 105,
+          "options": {
+            "code": {
+              "language": "plaintext",
+              "showLineNumbers": false,
+              "showMiniMap": false
+            },
+            "content": "## シーン5: 次の日を準備する時間 (16:30)\n\n夕方ピーク前の最適潮流計算は、「今の運用は経済的に最適か」という問いへの答えだ。限界費用の低いGEN-2・GEN-4を積み上げ、コスト高のGEN-3・GEN-6を抑制することで、310万円/日のコスト削減ポテンシャルが浮かび上がる。",
+            "mode": "markdown"
+          },
+          "pluginVersion": "10.2.0",
+          "title": "シーン5ヘッダー",
+          "type": "text"
+        },
+        {
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "powsybl-api"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              },
+              "unit": "¥"
+            }
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 8,
+            "x": 0,
+            "y": 45
+          },
+          "id": 12,
+          "options": {
+            "colorMode": "value",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "/^cost_breakdown\\.daily_savings_million_yen$/"
+            },
+            "textMode": "value_and_name"
+          },
+          "pluginVersion": "10.2.0",
+          "targets": [
+            {
+              "columns": [],
+              "datasource": {
+                "type": "yesoreyeram-infinity-datasource",
+                "uid": "powsybl-api"
+              },
+              "filters": [],
+              "format": "table",
+              "global_query_id": "",
+              "refId": "A",
+              "root_selector": "",
+              "source": "url",
+              "type": "json",
+              "url": "http://10.217.5.224:8000/api/v1/opf",
+              "url_options": {
+                "method": "GET"
+              }
+            }
+          ],
+          "title": "1日コスト削減ポテンシャル (百万円)",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "powsybl-api"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [
+                {
+                  "options": {
+                    "CONVERGED": {
+                      "color": "green",
+                      "index": 0,
+                      "text": "収束"
+                    }
+                  },
+                  "type": "value"
+                }
+              ],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              }
+            }
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 8,
+            "x": 8,
+            "y": 45
+          },
+          "id": 13,
+          "options": {
+            "colorMode": "background",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "/^convergence_status$/"
+            },
+            "textMode": "value_and_name"
+          },
+          "pluginVersion": "10.2.0",
+          "targets": [
+            {
+              "columns": [],
+              "datasource": {
+                "type": "yesoreyeram-infinity-datasource",
+                "uid": "powsybl-api"
+              },
+              "filters": [],
+              "format": "table",
+              "global_query_id": "",
+              "refId": "A",
+              "root_selector": "",
+              "source": "url",
+              "type": "json",
+              "url": "http://10.217.5.224:8000/api/v1/opf",
+              "url_options": {
+                "method": "GET"
+              }
+            }
+          ],
+          "title": "OPF 収束状態",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "powsybl-api"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "mappings": [
+                {
+                  "options": {
+                    "false": {
+                      "color": "red",
+                      "index": 1,
+                      "text": "違反あり"
+                    },
+                    "true": {
+                      "color": "green",
+                      "index": 0,
+                      "text": "全て満足"
+                    }
+                  },
+                  "type": "value"
+                }
+              ],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              }
+            }
+          },
+          "gridPos": {
+            "h": 4,
+            "w": 8,
+            "x": 16,
+            "y": 45
+          },
+          "id": 14,
+          "options": {
+            "colorMode": "background",
+            "graphMode": "none",
+            "justifyMode": "auto",
+            "orientation": "auto",
+            "reduceOptions": {
+              "values": false,
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "/^constraints_satisfied$/"
+            },
+            "textMode": "value_and_name"
+          },
+          "pluginVersion": "10.2.0",
+          "targets": [
+            {
+              "columns": [],
+              "datasource": {
+                "type": "yesoreyeram-infinity-datasource",
+                "uid": "powsybl-api"
+              },
+              "filters": [],
+              "format": "table",
+              "global_query_id": "",
+              "refId": "A",
+              "root_selector": "",
+              "source": "url",
+              "type": "json",
+              "url": "http://10.217.5.224:8000/api/v1/opf",
+              "url_options": {
+                "method": "GET"
+              }
+            }
+          ],
+          "title": "制約条件遵守状況",
+          "type": "stat"
+        },
+        {
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "powsybl-api"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                },
+                "inspect": false
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  }
+                ]
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "current_output_mw"
+                },
+                "properties": [
+                  {
+                    "id": "displayName",
+                    "value": "現在出力(MW)"
+                  },
+                  {
+                    "id": "decimals",
+                    "value": 1
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "optimal_output_mw"
+                },
+                "properties": [
+                  {
+                    "id": "displayName",
+                    "value": "最適出力(MW)"
+                  },
+                  {
+                    "id": "decimals",
+                    "value": 1
+                  },
+                  {
+                    "id": "custom.cellOptions",
+                    "value": {
+                      "type": "color-background"
+                    }
+                  },
+                  {
+                    "id": "thresholds",
+                    "value": {
+                      "mode": "absolute",
+                      "steps": [
+                        {
+                          "color": "transparent",
+                          "value": null
+                        },
+                        {
+                          "color": "light-blue",
+                          "value": 1
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "marginal_cost_yen_per_mwh"
+                },
+                "properties": [
+                  {
+                    "id": "displayName",
+                    "value": "限界費用(円/MWh)"
+                  },
+                  {
+                    "id": "decimals",
+                    "value": 0
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 24,
+            "x": 0,
+            "y": 49
+          },
+          "id": 15,
+          "options": {
+            "cellHeight": "sm",
+            "footer": {
+              "countRows": false,
+              "fields": "",
+              "reducer": [
+                "sum"
+              ],
+              "show": false
+            },
+            "showHeader": true
+          },
+          "pluginVersion": "10.2.0",
+          "targets": [
+            {
+              "columns": [],
+              "datasource": {
+                "type": "yesoreyeram-infinity-datasource",
+                "uid": "powsybl-api"
+              },
+              "filters": [],
+              "format": "table",
+              "global_query_id": "",
+              "refId": "A",
+              "root_selector": "generators",
+              "source": "url",
+              "type": "json",
+              "url": "http://10.217.5.224:8000/api/v1/opf",
+              "url_options": {
+                "method": "GET"
+              }
+            }
+          ],
+          "title": "発電機別 最適出力配分 (制約付き経済最適化)",
+          "type": "table"
+        }
+      ],
+      "refresh": "30s",
+      "schemaVersion": 38,
+      "style": "dark",
+      "tags": ["demo", "narrative", "powsybl", "digital-twin"],
+      "templating": {
+        "list": []
+      },
+      "time": {
+        "from": "now-1h",
+        "to": "now"
+      },
+      "timepicker": {},
+      "timezone": "",
+      "title": "次世代デジタル変電所 — デモナラティブ",
+      "uid": "demo-narrative",
+      "version": 0,
+      "weekStart": ""
+    }

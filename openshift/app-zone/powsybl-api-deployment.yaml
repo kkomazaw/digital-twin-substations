@@ -43,7 +43,7 @@ spec:
         - containerPort: 8000
         env:
         - name: INFLUXDB_URL
-          value: "http://influxdb.data-zone.svc.cluster.local:8086"
+          value: "http://10.217.5.116:8086"
         - name: INFLUXDB_TOKEN
           value: "my-super-secret-auth-token"
         - name: INFLUXDB_ORG

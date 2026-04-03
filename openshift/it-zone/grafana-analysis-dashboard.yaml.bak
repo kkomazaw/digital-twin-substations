@@ -95,7 +95,7 @@ data:
               "root_selector": "",
               "source": "url",
               "type": "json",
-              "url": "http://10.217.5.224:8000/api/v1/loadflow",
+              "url": "/api/v1/loadflow/api/v1/loadflow",
               "url_options": {
                 "data": "{\"network_id\":\"ieee14\"}",
                 "method": "POST",
@@ -178,7 +178,7 @@ data:
               "root_selector": "",
               "source": "url",
               "type": "json",
-              "url": "http://10.217.5.224:8000/api/v1/loadflow",
+              "url": "/api/v1/loadflow/api/v1/loadflow",
               "url_options": {
                 "data": "{\"network_id\":\"ieee14\"}",
                 "method": "POST",
@@ -261,7 +261,7 @@ data:
               "root_selector": "",
               "source": "url",
               "type": "json",
-              "url": "http://10.217.5.224:8000/api/v1/loadflow",
+              "url": "/api/v1/loadflow/api/v1/loadflow",
               "url_options": {
                 "data": "{\"network_id\":\"ieee14\"}",
                 "method": "POST",
@@ -336,7 +336,7 @@ data:
               "root_selector": "",
               "source": "url",
               "type": "json",
-              "url": "http://10.217.5.224:8000/api/v1/loadflow",
+              "url": "/api/v1/loadflow/api/v1/loadflow",
               "url_options": {
                 "data": "{\"network_id\":\"ieee14\"}",
                 "method": "POST",
@@ -414,7 +414,7 @@ data:
               "root_selector": "buses",
               "source": "url",
               "type": "json",
-              "url": "http://10.217.5.224:8000/api/v1/loadflow",
+              "url": "/api/v1/loadflow/api/v1/loadflow",
               "url_options": {
                 "data": "{\"network_id\":\"ieee14\"}",
                 "method": "POST",
@@ -514,7 +514,7 @@ data:
               "root_selector": "branches",
               "source": "url",
               "type": "json",
-              "url": "http://10.217.5.224:8000/api/v1/loadflow",
+              "url": "/api/v1/loadflow/api/v1/loadflow",
               "url_options": {
                 "data": "{\"network_id\":\"ieee14\"}",
                 "method": "POST",
@@ -592,7 +592,7 @@ data:
               "root_selector": "",
               "source": "url",
               "type": "json",
-              "url": "http://10.217.5.224:8000/api/v1/security",
+              "url": "/api/v1/loadflow/api/v1/security",
               "url_options": {
                 "data": "{\"network_id\":\"ieee14\",\"contingencies\":[{\"id\":\"test\",\"elements\":[\"L1-5-1\"]}]}",
                 "method": "POST",
@@ -670,7 +670,7 @@ data:
               "root_selector": "",
               "source": "url",
               "type": "json",
-              "url": "http://10.217.5.224:8000/api/v1/security",
+              "url": "/api/v1/loadflow/api/v1/security",
               "url_options": {
                 "data": "{\"network_id\":\"ieee14\",\"contingencies\":[{\"id\":\"test\",\"elements\":[\"L1-5-1\"]}]}",
                 "method": "POST",
@@ -744,7 +744,7 @@ data:
               "root_selector": "",
               "source": "url",
               "type": "json",
-              "url": "http://10.217.5.224:8000/api/v1/security",
+              "url": "/api/v1/loadflow/api/v1/security",
               "url_options": {
                 "data": "{\"network_id\":\"ieee14\",\"contingencies\":[{\"id\":\"test\",\"elements\":[\"L1-5-1\"]}]}",
                 "method": "POST",
